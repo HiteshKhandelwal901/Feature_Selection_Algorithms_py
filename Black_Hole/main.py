@@ -76,7 +76,7 @@ for numer in range(30):
     print("iteration || ", numer)
 
     # Initializing number of stars 
-    pop_number = 10
+    pop_number = 5
     #list to append the stars
     pop = []
     for i in range(0, pop_number):
