@@ -123,7 +123,6 @@ def isCrossingEventHorizon(BH, star, horizon):
     r = 0.0
     #euclidian norm
     for i in range(len(star.pos)):
-        # ---- problem if  dimensions are variable -------
         r += pow(star.pos[i] - BH.pos[i], 2)
     if math.sqrt(r) <= horizon:
         return True
@@ -195,7 +194,7 @@ if __name__ == "__main__":
     #print("after update new pos value = ", s.pos)
 
     for numer in range(1):
-        print("iteration || ", numer)
+        #print("iteration || ", numer)
         # Initializing number of stars 
         pop_number = 3
         #list to append the stars
@@ -231,8 +230,18 @@ if __name__ == "__main__":
             for i in range(pop_number):
                 pop[i].updateLocation(BH)
                 #print("star ", i, " new location = ", pop[i].pos)
+            print("fitness of black hole in iteration {} {}".format(BH.fitness, it))
 
+            eventHorizon = calcEvetHorizon(BH, pop)
+
+            for i in range(pop_number):
+                if isCrossingEventHorizon(BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
+                    for j in range(dim):
+                        pop[i].pos[j] = pop[i].random_generator()
+            
+            
             it = it + 1
+        
 
 
 
