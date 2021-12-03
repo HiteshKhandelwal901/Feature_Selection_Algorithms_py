@@ -1,3 +1,8 @@
+ 
+
+
+from collections import defaultdict
+import warnings,os
 import pandas as pd
 import random
 import math
@@ -7,6 +12,10 @@ from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+    os.environ["PYTHONWARNINGS"] = "ignore"
+
 
 #Step 1 :  Read the data
 
@@ -15,8 +24,8 @@ Y = data['Species']
 X = data.drop(columns = ['Id', 'Species'])
 
 #Step 2 :  Set the parametrs like dimensions 
-dim = 4
-range_d = 200.0
+dim = 30
+
 
 #Step 3:   Create Stars
 class Star:
@@ -44,9 +53,12 @@ class Star:
             if dim<0.7:
                 feature_index.append(index)
         return feature_index
+
+    
     
     def get_score(self, feature_index):
         #print("insdie score")
+        """
         column_names = []
         data = pd.read_csv('Iris.csv')
         Y = data['Species']
@@ -61,6 +73,17 @@ class Star:
         
         X = X.drop(columns = column_names)
         #print("X after removing features = ", X)
+        """
+
+        column_names = []
+        index_to_names = defaultdict()
+        data = pd.read_csv('breast_data.csv')
+        Y = data['diagnosis']
+        X = data.drop(columns = ['id', 'diagnosis'])
+
+        for index,col in enumerate(X.columns):
+            index_to_names[index] = col
+
 
         if X.shape[1] > 0:
             #print("X is not None")
@@ -68,7 +91,7 @@ class Star:
             Y = le.fit_transform(Y)
             X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.2)
 
-            LR = LogisticRegression(random_state=0, solver='lbfgs', multi_class='ovr').fit(X_train, Y_train)
+            LR = LogisticRegression(random_state=0, solver='sag', max_iter = 1000, verbose = 0).fit(X_train, Y_train)
             score = LR.score(X_test,Y_test)
             return score
         else:
@@ -196,7 +219,7 @@ if __name__ == "__main__":
     for numer in range(1):
         #print("iteration || ", numer)
         # Initializing number of stars 
-        pop_number = 3
+        pop_number = 20
         #list to append the stars
         pop = []
 
@@ -206,7 +229,7 @@ if __name__ == "__main__":
             #print("Star {} pos  = {}".format(i, pop[i].pos))
 
 
-        max_iter, it= 10, 0
+        max_iter, it= 5, 0
         BH = Star()
         #print("intialized blackhole position = ", BH.pos, " with fitness = ", BH.fitness)
 
@@ -241,12 +264,6 @@ if __name__ == "__main__":
             
             
             it = it + 1
-        
-
-
-
-
-
 
 
 
