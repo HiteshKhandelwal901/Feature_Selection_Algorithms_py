@@ -1,0 +1,308 @@
+from collections import defaultdict
+import warnings,os
+import pandas as pd
+import random
+import math
+import sys
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
+from sklearn.linear_model import LogisticRegression
+
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+    os.environ["PYTHONWARNINGS"] = "ignore"
+
+dim = 7129
+
+
+def selectBH(stars):
+    """Returns index of star which became black hole"""
+    tmp = Star()
+    tmp.fitness = -1
+    it = 0
+    bhNum = 0
+    for star in stars:
+        if star.fitness > tmp.fitness:
+            tmp = star
+            bhNum = it
+        it += 1
+    return bhNum
+
+
+def calcEvetHorizon(BH, stars):
+    tmp = 0
+    for star in stars:
+        tmp += star.fitness
+    return BH.fitness / tmp
+
+def isCrossingEventHorizon(BH, star, horizon):
+    r = 0.0
+    #euclidian norm
+    for i in range(len(star.pos)):
+        r += pow(star.pos[i] - BH.pos[i], 2)
+    if math.sqrt(r) <= horizon:
+        return True
+    return False
+
+
+
+
+
+
+
+class Star:
+    def __init__(self):
+        self.pos =  [self.random_generator() for i in range(dim)]
+        self.isBH = False
+        self.fitness = 0.0
+
+    def updateFitness(self, X, Y):
+        #print("position  = ", self.pos)
+        #print("updating fitnessing value")
+        self.fitness = self.Obj_fun(X,Y) #set this to objective function
+  
+    def Obj_fun(self, X, Y):
+        #print("inside Pbjective Function")
+        feature_index = self.select_features()
+        #print("feature index = ", feature_index)
+        score = self.get_score(feature_index, X, Y)
+        #print("score = ", score)
+        return score
+    
+    def select_features(self):
+        #print("inside feature_index")
+        feature_index = []
+        for index,dim in enumerate(self.pos):
+            if dim<0.5:
+                feature_index.append(index)
+        return feature_index
+
+
+    def updateLocation(self, BH):
+        #print("inside updateLocation")
+        for i in range(len(self.pos)):
+            rand_num = self.random_generator()
+            self.pos[i] += rand_num * (BH.pos[i] - self.pos[i])
+        
+    def random_generator(self):
+        num = random.uniform(0, 1)
+        return num
+
+    def get_score(self, feature_index, X, Y):
+        column_names = []
+        index_to_names = defaultdict()
+        #creating a dictionary of index to column names for next step
+        for index,col in enumerate(X.columns):
+            index_to_names[index] = col
+
+        #print("index_to_names = ", index_to_names)
+        #get the column names from the feature index that has be removed from X
+        for index in feature_index:
+            column_names.append(index_to_names[index])
+        
+        #print("column names = ", column_names)
+        
+        X = X.drop(columns = column_names)
+        #print("X after removing features = ", X)
+        
+        
+        if X.shape[1] > 0:
+            le = preprocessing.LabelEncoder()
+            Y = le.fit_transform(Y)
+            X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.2)
+
+            LR = LogisticRegression(random_state=0, solver='sag', max_iter = 1000, verbose = 0).fit(X_train, Y_train)
+            score = LR.score(X_test,Y_test)
+            return score
+        else:
+            #print("X is None")
+            return 0
+
+    def __str__(self):
+        print(self.pos)
+        return "Is Bh: " + str(self.isBH) + " fitness: " + str(self.fitness)
+
+    
+
+    
+def fit(num_of_samples,num_iter, X, Y):
+    #print("iteration || ", numer)
+    # Initializing number of stars 
+    pop_number = num_of_samples
+    #list to append the stars
+    pop = []
+    for i in range(0, pop_number):
+        pop.append(Star())
+        #print("Star {} pos  = {}".format(i, pop[i].pos))
+
+
+    max_iter, it= num_iter, 0
+    BH = Star()
+    #print("intialized blackhole position = ", BH.pos, " with fitness = ", BH.fitness)
+
+    while it < max_iter:
+        print("iloop iter || ", it)
+        #For each star, evaluate the objective function
+        for i in range(0, pop_number):
+            #print("updating fitness for star ", i)
+            #each start you update its fitness value
+            pop[i].updateFitness(X, Y)
+            pop[i].isBH = False
+            #print("Star ",i, " fitness value = ", pop[i].fitness)
+
+        #print("done updating fitness and now finding the new blackhole")
+
+        BH = pop[selectBH(pop)]
+        #print("the best blackhole position = ", BH.pos, " Score = ", BH.fitness)
+        BH.isBH = True
+            
+        #print("updating the location of the other stars")
+        for i in range(pop_number):
+            pop[i].updateLocation(BH)
+            #print("star ", i, " new location = ", pop[i].pos)
+        print("fitness of black hole in iteration {} {}".format(BH.fitness, it))
+
+        eventHorizon = calcEvetHorizon(BH, pop)
+
+        for i in range(pop_number):
+            if isCrossingEventHorizon(BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
+                for j in range(dim):
+                    pop[i].pos[j] = pop[i].random_generator()
+        
+        
+        it = it + 1
+    return BH
+
+
+
+if __name__ == "__main__":
+    """
+    ---------- IRIS DATASET RESULTS ----------
+    column_names = []
+    data = pd.read_csv('Iris.csv')
+    Y = data['Species']
+    X = data.drop(columns= ['Species', 'Id'])
+
+    #print("X after removing features = ", X)
+    print("features information : ", X.shape)
+    print("labels information : ", Y.shape)
+    best_star = fit(5,300,X,Y)
+    print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
+    print("best subset = ", best_star.select_features())
+    """
+
+
+    """
+
+    ---------BREAST-CANCER DATASET BENCHMARKING--------
+    Column_names = []
+    index_to_names = defaultdict()
+    data = pd.read_csv('breast_data.csv')
+    Y = data['diagnosis']
+    X = data.drop(columns = ['id', 'diagnosis'])
+
+    for index,col in enumerate(X.columns):
+        index_to_names[index] = col
+    
+    print("index_to_names = ",index_to_names)
+
+    #print("X after removing features = ", X)
+    print("features information : ", X.shape)
+    print("labels information : ", Y.shape)
+    best_star = fit(10,100,X,Y)
+    print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
+    print("best subset = ", best_star.select_features())
+    feature_index = best_star.select_features()
+    print("number of reduced features =", feature_index)
+
+    cols = []
+
+    for each_feat_index in feature_index:
+        cols.append(index_to_names[each_feat_index])
+
+    print("the best subset of feature space is  :", cols)
+    print("the corresponding accuracy is :", best_star.fitness )
+    """
+
+    """
+    ----- ZOO DATASET BENCHAMRKING ----------
+
+    Column_names = []
+    index_to_names = defaultdict()
+    data = pd.read_csv('zoo.csv')
+    Y = data['class_type']
+    X = data.drop(columns = ['animal_name', 'class_type'])
+
+    for index,col in enumerate(X.columns):
+        index_to_names[index] = col
+    
+    print("index_to_names = ",index_to_names)
+
+    #print("X after removing features = ", X)
+    print("features information : ", X.shape)
+    print("labels information : ", Y.shape)
+    best_star = fit(10,100,X,Y)
+    print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
+    print("best subset = ", best_star.select_features())
+    feature_index = best_star.select_features()
+    print("number of reduced features =", feature_index)
+
+    cols = []
+
+    for each_feat_index in feature_index:
+        cols.append(index_to_names[each_feat_index])
+
+    print("the best subset of feature space is  :", cols)
+    print("the corresponding accuracy is :", best_star.fitness )
+    """
+
+    Column_names = []
+    index_to_names = defaultdict()
+    data = pd.read_csv('leukemia.csv')
+    Y = data[data.columns[-1]]
+    print("y = ", Y)
+
+    positive = 0
+    negitive = 0
+    for i,label in enumerate(Y):
+        if Y[i] == "ALL":
+            Y[i] = 1
+            positive = positive +1
+        else:
+            negitive = negitive +1
+            Y[i] = 0
+    
+    print("positive = ", positive)
+    print("negitive = ", negitive)
+    
+    print("y = ", Y)
+    X = data.iloc[:, :-1]
+
+    for index,col in enumerate(X.columns):
+        index_to_names[index] = col
+    
+    #print("index_to_names = ",index_to_names)
+
+    #print("X after removing features = ", X)
+    print("features information : ", X.shape)
+    print("labels information : ", Y.shape)
+    
+    
+    
+    
+    best_star = fit(5,20,X,Y)
+    print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
+    print("best subset = ", best_star.select_features())
+    feature_index = best_star.select_features()
+    print("number of reduced features =", len(feature_index))
+
+    cols = []
+
+    for each_feat_index in feature_index:
+        cols.append(index_to_names[each_feat_index])
+
+    print("the best subset of feature space is  :", cols)
+    print("the corresponding accuracy is :", best_star.fitness )
+
+    
