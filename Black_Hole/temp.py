@@ -8,18 +8,20 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegressionCV
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 7129
+dim = 4
+
 
 
 def selectBH(stars):
     """Returns index of star which became black hole"""
     tmp = Star()
-    tmp.fitness = -1
+    tmp.fitness = 0
     it = 0
     bhNum = 0
     for star in stars:
@@ -46,7 +48,13 @@ def isCrossingEventHorizon(BH, star, horizon):
     return False
 
 
-
+def select_features_final(pos):
+    #print("inside feature_index")
+    feature_index = []
+    for index,dim in enumerate(pos):
+        if dim<0.5:
+            feature_index.append(index)
+    return feature_index
 
 
 
@@ -59,7 +67,6 @@ class Star:
 
     def updateFitness(self, X, Y):
         #print("position  = ", self.pos)
-        #print("updating fitnessing value")
         self.fitness = self.Obj_fun(X,Y) #set this to objective function
   
     def Obj_fun(self, X, Y):
@@ -112,8 +119,9 @@ class Star:
             Y = le.fit_transform(Y)
             X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.2)
 
-            LR = LogisticRegression(random_state=0, solver='sag', max_iter = 1000, verbose = 0).fit(X_train, Y_train)
+            LR = LogisticRegressionCV(max_iter = 1000, verbose = 0).fit(X_train, Y_train)
             score = LR.score(X_test,Y_test)
+            #fitness = score - (1*(len(feature_index)/X.shape[1]))
             return score
         else:
             #print("X is None")
@@ -123,11 +131,9 @@ class Star:
         print(self.pos)
         return "Is Bh: " + str(self.isBH) + " fitness: " + str(self.fitness)
 
-    
 
     
 def fit(num_of_samples,num_iter, X, Y):
-    #print("iteration || ", numer)
     # Initializing number of stars 
     pop_number = num_of_samples
     #list to append the stars
@@ -138,7 +144,8 @@ def fit(num_of_samples,num_iter, X, Y):
 
 
     max_iter, it= num_iter, 0
-    BH = Star()
+    best_BH = Star()
+    best_fitness = 0
     #print("intialized blackhole position = ", BH.pos, " with fitness = ", BH.fitness)
 
     while it < max_iter:
@@ -151,34 +158,56 @@ def fit(num_of_samples,num_iter, X, Y):
             pop[i].isBH = False
             #print("Star ",i, " fitness value = ", pop[i].fitness)
 
-        #print("done updating fitness and now finding the new blackhole")
+        #print("done updating fitness and now finding the new blackhole\n")
 
         BH = pop[selectBH(pop)]
+        #check if the new black hole is fitter than the previous ones
+        #if it  is not then 
         #print("the best blackhole position = ", BH.pos, " Score = ", BH.fitness)
         BH.isBH = True
+        #print("comapring with global black hole")
+        if BH.fitness > best_fitness:
+            #print("found new global blackhole")
+            best_BH_position = BH.pos
+            best_fitness = BH.fitness
+            #print("global blackhole = ", best_BH_position, " fitness = ", best_fitness, "\n\n\n")
+        else:
+            pass
+            #print("same old global blackhole = ", best_BH_position, best_fitness)
             
         #print("updating the location of the other stars")
         for i in range(pop_number):
             pop[i].updateLocation(BH)
             #print("star ", i, " new location = ", pop[i].pos)
-        print("fitness of black hole in iteration {} {}".format(BH.fitness, it))
+
+        #print("fitness of black hole in iteration {} {}".format(BH.fitness, it))
+        #print("best local black hole in iteration {} {}".format(BH.fitness, it))
 
         eventHorizon = calcEvetHorizon(BH, pop)
+        #print("eventHorizon = ", eventHorizon)
 
         for i in range(pop_number):
             if isCrossingEventHorizon(BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
+                #print("true -crossing event horizon")
                 for j in range(dim):
                     pop[i].pos[j] = pop[i].random_generator()
+                #print("new random for star", i,"  = ",pop[i].pos)
         
-        
+        print("accuracy || ", best_fitness, "\n")
         it = it + 1
-    return BH
+    
+    #print("AT THE END BEST BH POSITION = ", best_BH_position)
+    features = select_features_final(best_BH_position)
+    #print("returning features = ", features)
+
+    
+    return features, best_fitness
 
 
 
 if __name__ == "__main__":
-    """
-    ---------- IRIS DATASET RESULTS ----------
+   # """
+  #---------- IRIS DATASET RESULTS ----------
     column_names = []
     data = pd.read_csv('Iris.csv')
     Y = data['Species']
@@ -187,15 +216,19 @@ if __name__ == "__main__":
     #print("X after removing features = ", X)
     print("features information : ", X.shape)
     print("labels information : ", Y.shape)
-    best_star = fit(5,300,X,Y)
-    print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
-    print("best subset = ", best_star.select_features())
-    """
+    best_features, best_fitness = fit(6,20,X,Y)
+    #print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
+    #print("best subset = ", best_star.select_features())
+    X= X.drop(X.columns[best_features], axis = 1)
+    print("features eliminated = ", best_features)
+    print("best subset = ", X)
+    print("best fitness for these features = ", best_fitness)
+    #"""
 
 
-    """
-
-    ---------BREAST-CANCER DATASET BENCHMARKING--------
+    
+    """"
+    #---------BREAST-CANCER DATASET BENCHMARKING--------
     Column_names = []
     index_to_names = defaultdict()
     data = pd.read_csv('breast_data.csv')
@@ -210,7 +243,7 @@ if __name__ == "__main__":
     #print("X after removing features = ", X)
     print("features information : ", X.shape)
     print("labels information : ", Y.shape)
-    best_star = fit(10,100,X,Y)
+    best_star = fit(10,20,X,Y)
     print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
     print("best subset = ", best_star.select_features())
     feature_index = best_star.select_features()
@@ -257,6 +290,9 @@ if __name__ == "__main__":
     print("the corresponding accuracy is :", best_star.fitness )
     """
 
+
+    """
+    ------- leukemia dataset ------
     Column_names = []
     index_to_names = defaultdict()
     data = pd.read_csv('leukemia.csv')
@@ -304,5 +340,10 @@ if __name__ == "__main__":
 
     print("the best subset of feature space is  :", cols)
     print("the corresponding accuracy is :", best_star.fitness )
+
+    """
+
+
+
 
     
