@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LogisticRegressionCV
+from utility import hamming_scoreCV
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -16,6 +17,11 @@ if not sys.warnoptions:
 
 dim = 30
 
+def get_all_correlations(X,Y):
+    return 0
+
+def get_max_label_correlations(X,Y):
+    return 0
 
 
 def selectBH(stars):
@@ -131,6 +137,9 @@ class Star:
             #term1 = (1*(ratio))
             #corr_X  = X.corr(method ='pearson').abs()
             #sum_corr_X = sum(X.corr)
+            term_2 = get_all_correlations(X,Y)
+            term_3 = get_max_label_correlations(X,Y)
+            
             fitness = score - (1*(ratio))
             return fitness
             #return score
