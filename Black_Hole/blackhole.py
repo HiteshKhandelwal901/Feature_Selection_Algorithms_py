@@ -10,7 +10,7 @@ from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.datasets import make_multilabel_classification
-from utility import hamming_scoreCV
+from utility import hamming_scoreCV, feature_correlation_sum
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -137,13 +137,15 @@ class Star:
             #print("len of selected features = ", features_selected)
             ratio = features_selected / size
             #print("ratio = ", ratio)
-            #term1 = (1*(ratio))
+            term1 = (1*(ratio))
+            term2 = feature_correlation_sum(X)
+            #print("term2 = ", term2)
             #corr_X  = X.corr(method ='pearson').abs()
             #sum_corr_X = sum(X.corr)
             #term_2 = get_all_correlations(X,Y)
             #term_3 = get_max_label_correlations(X,Y)
-            
-            fitness = score - (1*(ratio))
+            #fitness = score- (0.6*(ratio))
+            fitness = score - (0.6*(ratio)) - (0.5*term2)
             return fitness
             #return score
         else:
@@ -218,6 +220,7 @@ def fit(num_of_samples,num_iter, X, Y):
         
         print("accuracy || ", best_fitness, "\n")
         it = it + 1
+        #break
         
     
     #print("AT THE END BEST BH POSITION = ", best_BH_position)
@@ -237,11 +240,11 @@ if __name__ == "__main__":
     return_indicator = 'sparse', allow_unlabeled = False)
     X = pd.DataFrame(X.toarray())
     y = y.toarray()
-    #print("X SHAPE  = ", X.shape,"type = ", type(X))
-    #print("Y shape  = ", y.shape)
-    #print("X = ", X)
+    print("X SHAPE  = ", X.shape,"type = ", type(X))
+    print("Y shape  = ", y.shape)
+    print("cols = ", X.columns)
 
-    worst_features, best_fitness = fit(10,20,X,y)
+    worst_features, best_fitness = fit(5,20,X,y)
     X= X.drop(X.columns[worst_features], axis = 1)
     print("features eliminated = ", worst_features)
     print("best subset = ", X)

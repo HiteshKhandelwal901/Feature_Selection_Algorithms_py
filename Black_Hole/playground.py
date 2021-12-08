@@ -8,16 +8,21 @@ import numpy as np
 
 
 
-def get_all_correlations(X,Y):
+def get_all_correlations(X):
+    """
+    X is dataframe
+    """
     dataCorr = X.corr(method='pearson').abs()
     print("--------- correlations ------\n\n", dataCorr)
     dataCorr = dataCorr[abs(dataCorr) >= 0].stack().reset_index()
     dataCorr = dataCorr[dataCorr['level_0'].astype(str)!=dataCorr['level_1'].astype(str)]
- 
+    print("dataCorr = ", dataCorr)
     # filtering out lower/upper triangular duplicates 
     dataCorr['ordered-cols'] = dataCorr.apply(lambda x: '-'.join(sorted([x['level_0'],x['level_1']])),axis=1)
+    print("dataCorr after ordered columns = ",dataCorr)
     dataCorr = dataCorr.drop_duplicates(['ordered-cols'])
     dataCorr.drop(['ordered-cols'], axis=1, inplace=True)
+    
     #dataCorr.sort_values(by=[0], ascending=False).head(10)
     print("dataCorr = ", dataCorr)
     print("columns = ", dataCorr.columns)
@@ -45,11 +50,6 @@ def get_max_label_correlations(X,Y):
         return result
 
 
-
-            
-    return 0
-
-
 data = pd.read_csv('Iris.csv')
 Y = data['Species']
 le = preprocessing.LabelEncoder()
@@ -58,5 +58,5 @@ Y = le.fit_transform(Y)
 #print("type(y) = ", type(Y))
 X = data.drop(columns= ['Species', 'Id'])
 
-#result = get_all_correlations(X,Y)
-result2 = get_max_label_correlations(X,Y)
+result = get_all_correlations(X)
+#result2 = get_max_label_correlations(X,Y)
