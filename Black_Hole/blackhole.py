@@ -9,13 +9,14 @@ from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LogisticRegressionCV
+from sklearn.datasets import make_multilabel_classification
 from utility import hamming_scoreCV
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 30
+dim = 4
 
 def get_all_correlations(X,Y):
     return 0
@@ -122,14 +123,16 @@ class Star:
         
         
         if X.shape[1] > 0:
-            le = preprocessing.LabelEncoder()
-            Y = le.fit_transform(Y)
-            X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.2)
+            #le = preprocessing.LabelEncoder()
+            #Y = le.fit_transform(Y)
+            #X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.2)
 
-            LR = LogisticRegressionCV(max_iter = 1000, verbose = 0).fit(X_train, Y_train)
-            score = LR.score(X_test,Y_test)
+            #LR = LogisticRegressionCV(max_iter = 1000, verbose = 0).fit(X_train, Y_train)
+            #score = LR.score(X_test,Y_test)
             #print("length of feature index = ", len(feature_index))
             #print("X[1] shape = ", size)
+
+            score = hamming_scoreCV(X, Y)
             features_selected = (size - len(feature_index))
             #print("len of selected features = ", features_selected)
             ratio = features_selected / size
@@ -137,8 +140,8 @@ class Star:
             #term1 = (1*(ratio))
             #corr_X  = X.corr(method ='pearson').abs()
             #sum_corr_X = sum(X.corr)
-            term_2 = get_all_correlations(X,Y)
-            term_3 = get_max_label_correlations(X,Y)
+            #term_2 = get_all_correlations(X,Y)
+            #term_3 = get_max_label_correlations(X,Y)
             
             fitness = score - (1*(ratio))
             return fitness
@@ -215,10 +218,12 @@ def fit(num_of_samples,num_iter, X, Y):
         
         print("accuracy || ", best_fitness, "\n")
         it = it + 1
+        
     
     #print("AT THE END BEST BH POSITION = ", best_BH_position)
     features = select_features_final(best_BH_position)
     #print("returning features = ", features)
+    
 
     
     return features, best_fitness
@@ -226,6 +231,26 @@ def fit(num_of_samples,num_iter, X, Y):
 
 
 if __name__ == "__main__":
+    print("running driver code")
+
+    X, y = make_multilabel_classification(n_features = 4,sparse = True, n_labels = 3,
+    return_indicator = 'sparse', allow_unlabeled = False)
+    X = pd.DataFrame(X.toarray())
+    y = y.toarray()
+    #print("X SHAPE  = ", X.shape,"type = ", type(X))
+    #print("Y shape  = ", y.shape)
+    #print("X = ", X)
+
+    worst_features, best_fitness = fit(10,20,X,y)
+    X= X.drop(X.columns[worst_features], axis = 1)
+    print("features eliminated = ", worst_features)
+    print("best subset = ", X)
+    print("best fitness for these features = ", best_fitness)
+
+
+
+
+
     """
   #---------- IRIS DATASET RESULTS ----------
     column_names = []

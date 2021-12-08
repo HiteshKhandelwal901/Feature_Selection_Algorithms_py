@@ -37,18 +37,23 @@ def hamming_get_accuracy(y_pred,y_test):
 def hamming_scoreCV(X, y, n_splits = 5):
     kf = KFold(n_splits)
 
-    X = X.toarray()
-    y = y.toarray()
+    #X = X.toarray()
+    #y = y.toarray()
 
     X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2)
     
     kfold = kf.split(X_train, Y_train)
     scores = []
     for k, (train, test) in enumerate(kfold):
+        #print("K  = ", k)
         x_train = np.take(X_train, train , axis = 0)
+        #print("x_train shape = ", x_train.shape)
         y_train = np.take(Y_train, train , axis = 0)
+        #print("y_train shape = ", y_train.shape)
         x_test = np.take(X_train, test , axis = 0)
+        #print("x_test shape = ", x_test.shape)
         y_test = np.take(Y_train, test , axis = 0)
+        #print("y test shape = ", y_test.shape)
         clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=1)
         clf.fit(x_train, y_train)
         y_pred = clf.predict(x_test)
