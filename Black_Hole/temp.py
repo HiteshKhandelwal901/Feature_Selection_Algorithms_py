@@ -14,7 +14,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 4
+dim = 30
 
 
 
@@ -97,6 +97,7 @@ class Star:
         return num
 
     def get_score(self, feature_index, X, Y):
+        size = X.shape[1]
         column_names = []
         index_to_names = defaultdict()
         #creating a dictionary of index to column names for next step
@@ -121,8 +122,18 @@ class Star:
 
             LR = LogisticRegressionCV(max_iter = 1000, verbose = 0).fit(X_train, Y_train)
             score = LR.score(X_test,Y_test)
-            #fitness = score - (1*(len(feature_index)/X.shape[1]))
-            return score
+            #print("length of feature index = ", len(feature_index))
+            #print("X[1] shape = ", size)
+            features_selected = (size - len(feature_index))
+            #print("len of selected features = ", features_selected)
+            ratio = features_selected / size
+            #print("ratio = ", ratio)
+            #term1 = (1*(ratio))
+            #corr_X  = X.corr(method ='pearson').abs()
+            #sum_corr_X = sum(X.corr)
+            fitness = score - (1*(ratio))
+            return fitness
+            #return score
         else:
             #print("X is None")
             return 0
@@ -206,7 +217,7 @@ def fit(num_of_samples,num_iter, X, Y):
 
 
 if __name__ == "__main__":
-   # """
+    """
   #---------- IRIS DATASET RESULTS ----------
     column_names = []
     data = pd.read_csv('Iris.csv')
@@ -216,14 +227,14 @@ if __name__ == "__main__":
     #print("X after removing features = ", X)
     print("features information : ", X.shape)
     print("labels information : ", Y.shape)
-    best_features, best_fitness = fit(6,20,X,Y)
+    best_features, best_fitness = fit(3,3,X,Y)
     #print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
     #print("best subset = ", best_star.select_features())
     X= X.drop(X.columns[best_features], axis = 1)
     print("features eliminated = ", best_features)
     print("best subset = ", X)
     print("best fitness for these features = ", best_fitness)
-    #"""
+    """
 
 
     
@@ -243,19 +254,25 @@ if __name__ == "__main__":
     #print("X after removing features = ", X)
     print("features information : ", X.shape)
     print("labels information : ", Y.shape)
-    best_star = fit(10,20,X,Y)
-    print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
-    print("best subset = ", best_star.select_features())
-    feature_index = best_star.select_features()
-    print("number of reduced features =", feature_index)
+    #best_star = fit(10,20,X,Y)
+    best_features, best_fitness = fit(6,20,X,Y)
+    X= X.drop(X.columns[best_features], axis = 1)
+    print("features eliminated = ", best_features)
+    print("best subset = ", X)
+    print("best fitness for these features = ", best_fitness)
+    print("reduced feature space = ", X.shape)
+    #print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
+    #print("best subset = ", best_star.select_features())
+    #feature_index = best_star.select_features()
+    #print("number of reduced features =", feature_index)
 
-    cols = []
+    #cols = []
 
-    for each_feat_index in feature_index:
-        cols.append(index_to_names[each_feat_index])
+    #for each_feat_index in feature_index:
+    #    cols.append(index_to_names[each_feat_index])
 
-    print("the best subset of feature space is  :", cols)
-    print("the corresponding accuracy is :", best_star.fitness )
+    #print("the best subset of feature space is  :", cols)
+    #print("the corresponding accuracy is :", best_star.fitness )
     """
 
     """
