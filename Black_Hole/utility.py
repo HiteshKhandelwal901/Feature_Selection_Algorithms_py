@@ -25,23 +25,29 @@ if not sys.warnoptions:
 
 
 def get_max_label_correlations(X,Y):
+    #print("INFO : X shape = ", X.shape)
+    #print("cols  = ", X.columns)
+    Y = pd.DataFrame(Y)
     """
     X -> dataframe
-    Y -> dataframe with atleast 2 labels
+    Y -> array
     """
     max_corr = 0
     result = 0
     for cols in X.columns:
+        #print("cols = ", cols)
         x = X[cols]
         for label in Y.columns:
+            #print("label = ", label)
             y = Y[label]
-            corr, _ = pearsonr(x, y).abs()
-            print("corr = ", corr)
+            corr, _ = pearsonr(x, y)
+            corr = abs(corr)
+            #print("corr = ", corr)
             if corr > max_corr:
                 max_corr = corr
         result = result + max_corr
-        print("result = ", result)
-        return result
+    #print("result = ", result)
+    return result
 
 
 
@@ -76,7 +82,7 @@ def feature_correlation_sum(X):
         #print("sum = ", result)
 
     else:
-        print("result = ",0)
+        #print("result = ",0)
         return 0
 
     return result

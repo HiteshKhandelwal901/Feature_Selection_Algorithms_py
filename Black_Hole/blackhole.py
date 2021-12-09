@@ -10,19 +10,13 @@ from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.datasets import make_multilabel_classification
-from utility import hamming_scoreCV, feature_correlation_sum
+from utility import hamming_scoreCV, feature_correlation_sum, get_max_label_correlations
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 4
-
-def get_all_correlations(X,Y):
-    return 0
-
-def get_max_label_correlations(X,Y):
-    return 0
+dim = 20
 
 
 def selectBH(stars):
@@ -143,9 +137,9 @@ class Star:
             #corr_X  = X.corr(method ='pearson').abs()
             #sum_corr_X = sum(X.corr)
             #term_2 = get_all_correlations(X,Y)
-            #term_3 = get_max_label_correlations(X,Y)
+            term_3 = get_max_label_correlations(X,Y)
             #fitness = score- (0.6*(ratio))
-            fitness = score - (0.6*(ratio)) - (0.5*term2)
+            fitness = score - (0.6*ratio) - (0.5*term2) + (0.5*term_3)
             return fitness
             #return score
         else:
@@ -236,7 +230,7 @@ def fit(num_of_samples,num_iter, X, Y):
 if __name__ == "__main__":
     print("running driver code")
 
-    X, y = make_multilabel_classification(n_features = 4,sparse = True, n_labels = 3,
+    X, y = make_multilabel_classification(n_samples = 300,n_features = 20,sparse = True, n_labels = 3,
     return_indicator = 'sparse', allow_unlabeled = False)
     X = pd.DataFrame(X.toarray())
     y = y.toarray()
