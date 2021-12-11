@@ -16,7 +16,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 20
+dim = 4
 
 
 def selectBH(stars):
@@ -132,8 +132,9 @@ class Star:
             ratio = features_selected / size
             #print("ratio = ", ratio)
             term1 = (1*(ratio))
+            print("term1 = ", term1)
             term2 = feature_correlation_sum(X)
-            #print("term2 = ", term2)
+            print("term2 = ", term2)
             #corr_X  = X.corr(method ='pearson').abs()
             #sum_corr_X = sum(X.corr)
             #term_2 = get_all_correlations(X,Y)
@@ -159,7 +160,7 @@ def fit(num_of_samples,num_iter, X, Y):
     pop = []
     for i in range(0, pop_number):
         pop.append(Star())
-        #print("Star {} pos  = {}".format(i, pop[i].pos))
+        print("Star {} pos  = {}".format(i, pop[i].pos))
 
 
     max_iter, it= num_iter, 0
@@ -171,53 +172,55 @@ def fit(num_of_samples,num_iter, X, Y):
         print("iloop iter || ", it)
         #For each star, evaluate the objective function
         for i in range(0, pop_number):
-            #print("updating fitness for star ", i)
+            print("updating fitness for star ", i)
             #each start you update its fitness value
             pop[i].updateFitness(X, Y)
             pop[i].isBH = False
-            #print("Star ",i, " fitness value = ", pop[i].fitness)
+            print("Star ",i, " fitness value = ", pop[i].fitness)
 
-        #print("done updating fitness and now finding the new blackhole\n")
+        print("done updating fitness and now finding the new blackhole\n")
 
         BH = pop[selectBH(pop)]
         #check if the new black hole is fitter than the previous ones
         #if it  is not then 
-        #print("the best blackhole position = ", BH.pos, " Score = ", BH.fitness)
+        print("the best local blackhole position = ", BH.pos, " Score = ", BH.fitness)
         BH.isBH = True
         #print("comapring with global black hole")
         if BH.fitness > best_fitness:
             #print("found new global blackhole")
             best_BH_position = BH.pos
             best_fitness = BH.fitness
-            #print("global blackhole = ", best_BH_position, " fitness = ", best_fitness, "\n\n\n")
+            print("global blackhole = ", best_BH_position, " fitness = ", best_fitness, "\n\n\n")
         else:
             pass
-            #print("same old global blackhole = ", best_BH_position, best_fitness)
+            print("same old global blackhole = ", best_BH_position, best_fitness)
             
-        #print("updating the location of the other stars")
+        print("updating the location of the other stars")
         for i in range(pop_number):
             pop[i].updateLocation(BH)
-            #print("star ", i, " new location = ", pop[i].pos)
+            print("star ", i, " new location = ", pop[i].pos)
 
         #print("fitness of black hole in iteration {} {}".format(BH.fitness, it))
         #print("best local black hole in iteration {} {}".format(BH.fitness, it))
 
         eventHorizon = calcEvetHorizon(BH, pop)
-        #print("eventHorizon = ", eventHorizon)
+        print("eventHorizon = ", eventHorizon)
 
         for i in range(pop_number):
             if isCrossingEventHorizon(BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
-                #print("true -crossing event horizon")
+                print("true -crossing event horizon")
                 for j in range(dim):
                     pop[i].pos[j] = pop[i].random_generator()
-                #print("new random for star", i,"  = ",pop[i].pos)
+                print("new random for star", i,"  = ",pop[i].pos)
         
         print("accuracy || ", best_fitness, "\n")
         it = it + 1
         #break
         
     
-    #print("AT THE END BEST BH POSITION = ", best_BH_position)
+    #
+    # 
+    # ("AT THE END BEST BH POSITION = ", best_BH_position)
     features = select_features_final(best_BH_position)
     #print("returning features = ", features)
     
@@ -230,7 +233,7 @@ def fit(num_of_samples,num_iter, X, Y):
 if __name__ == "__main__":
     print("running driver code")
 
-    X, y = make_multilabel_classification(n_samples = 300,n_features = 20,sparse = True, n_labels = 3,
+    X, y = make_multilabel_classification(n_samples = 300,n_features = 4,sparse = True, n_labels = 3,
     return_indicator = 'sparse', allow_unlabeled = False)
     X = pd.DataFrame(X.toarray())
     y = y.toarray()
@@ -238,7 +241,7 @@ if __name__ == "__main__":
     print("Y shape  = ", y.shape)
     print("cols = ", X.columns)
 
-    worst_features, best_fitness = fit(5,20,X,y)
+    worst_features, best_fitness = fit(2,3,X,y)
     X= X.drop(X.columns[worst_features], axis = 1)
     print("features eliminated = ", worst_features)
     print("best subset = ", X)
