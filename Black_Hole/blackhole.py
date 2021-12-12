@@ -10,13 +10,13 @@ from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.datasets import make_multilabel_classification
-from utility import hamming_scoreCV, feature_correlation_sum, get_max_label_correlations
-
+from utility import hamming_scoreCV, hamming_get_accuracy, feature_correlation_sum, get_max_label_correlations
+import sklearn
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 4
+dim = 20
 
 
 def selectBH(stars):
@@ -65,18 +65,20 @@ class Star:
         self.pos =  [self.random_generator() for i in range(dim)]
         self.isBH = False
         self.fitness = 0.0
+        self.correct = 0
+        self.incorrect = 0
 
     def updateFitness(self, X, Y):
         #print("position  = ", self.pos)
-        self.fitness = self.Obj_fun(X,Y) #set this to objective function
+        self.fitness,self.correct,self.incorrect = self.Obj_fun(X,Y) #set this to objective function
   
     def Obj_fun(self, X, Y):
         #print("inside Pbjective Function")
         feature_index = self.select_features()
         #print("feature index = ", feature_index)
-        score = self.get_score(feature_index, X, Y)
+        score, correct, incorrect = self.get_score(feature_index, X, Y)
         #print("score = ", score)
-        return score
+        return score, correct, incorrect
     
     def select_features(self):
         #print("inside feature_index")
@@ -126,26 +128,26 @@ class Star:
             #print("length of feature index = ", len(feature_index))
             #print("X[1] shape = ", size)
 
-            score = hamming_scoreCV(X, Y)
+            score,clf,correct, incorrect = hamming_scoreCV(X, Y)
             features_selected = (size - len(feature_index))
             #print("len of selected features = ", features_selected)
             ratio = features_selected / size
             #print("ratio = ", ratio)
             term1 = (1*(ratio))
-            print("term1 = ", term1)
+            #print("term1 = ", term1)
             term2 = feature_correlation_sum(X)
-            print("term2 = ", term2)
+            #print("term2 = ", term2)
             #corr_X  = X.corr(method ='pearson').abs()
             #sum_corr_X = sum(X.corr)
             #term_2 = get_all_correlations(X,Y)
             term_3 = get_max_label_correlations(X,Y)
             #fitness = score- (0.6*(ratio))
             fitness = score - (0.6*ratio) - (0.5*term2) + (0.5*term_3)
-            return fitness
+            return fitness, correct, incorrect
             #return score
         else:
             #print("X is None")
-            return 0
+            return 0,0,0
 
     def __str__(self):
         print(self.pos)
@@ -160,7 +162,7 @@ def fit(num_of_samples,num_iter, X, Y):
     pop = []
     for i in range(0, pop_number):
         pop.append(Star())
-        print("Star {} pos  = {}".format(i, pop[i].pos))
+        #print("Star {} pos  = {}".format(i, pop[i].pos))
 
 
     max_iter, it= num_iter, 0
@@ -172,48 +174,50 @@ def fit(num_of_samples,num_iter, X, Y):
         print("iloop iter || ", it)
         #For each star, evaluate the objective function
         for i in range(0, pop_number):
-            print("updating fitness for star ", i)
+            #print("updating fitness for star ", i)
             #each start you update its fitness value
             pop[i].updateFitness(X, Y)
             pop[i].isBH = False
-            print("Star ",i, " fitness value = ", pop[i].fitness)
+            #print("Star ",i, " fitness value = ", pop[i].fitness)
 
-        print("done updating fitness and now finding the new blackhole\n")
+        #print("done updating fitness and now finding the new blackhole\n")
 
         BH = pop[selectBH(pop)]
         #check if the new black hole is fitter than the previous ones
         #if it  is not then 
-        print("the best local blackhole position = ", BH.pos, " Score = ", BH.fitness)
+        #print("the best local blackhole position = ", BH.pos, " Score = ", BH.fitness)
         BH.isBH = True
         #print("comapring with global black hole")
         if BH.fitness > best_fitness:
             #print("found new global blackhole")
             best_BH_position = BH.pos
             best_fitness = BH.fitness
-            print("global blackhole = ", best_BH_position, " fitness = ", best_fitness, "\n\n\n")
+            best_correct  = BH.correct
+            best_incorrect = BH.incorrect
+            #print("global blackhole = ", best_BH_position, " fitness = ", best_fitness, "\n\n\n")
         else:
             pass
-            print("same old global blackhole = ", best_BH_position, best_fitness)
+            #print("same old global blackhole = ", best_BH_position, best_fitness)
             
-        print("updating the location of the other stars")
+        #print("updating the location of the other stars")
         for i in range(pop_number):
             pop[i].updateLocation(BH)
-            print("star ", i, " new location = ", pop[i].pos)
+            #print("star ", i, " new location = ", pop[i].pos)
 
         #print("fitness of black hole in iteration {} {}".format(BH.fitness, it))
         #print("best local black hole in iteration {} {}".format(BH.fitness, it))
 
         eventHorizon = calcEvetHorizon(BH, pop)
-        print("eventHorizon = ", eventHorizon)
+        #print("eventHorizon = ", eventHorizon)
 
         for i in range(pop_number):
             if isCrossingEventHorizon(BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
-                print("true -crossing event horizon")
+                #print("true -crossing event horizon")
                 for j in range(dim):
                     pop[i].pos[j] = pop[i].random_generator()
-                print("new random for star", i,"  = ",pop[i].pos)
+                #print("new random for star", i,"  = ",pop[i].pos)
         
-        print("accuracy || ", best_fitness, "\n")
+        print("fitness || ", best_fitness, "\n")
         it = it + 1
         #break
         
@@ -222,18 +226,67 @@ def fit(num_of_samples,num_iter, X, Y):
     # 
     # ("AT THE END BEST BH POSITION = ", best_BH_position)
     features = select_features_final(best_BH_position)
+    print("best BH position = ", best_BH_position)
     #print("returning features = ", features)
     
 
     
-    return features, best_fitness
+    return features, best_fitness, best_correct, best_incorrect
 
 
 
 if __name__ == "__main__":
     print("running driver code")
 
-    X, y = make_multilabel_classification(n_samples = 300,n_features = 4,sparse = True, n_labels = 3,
+    data = pd.read_csv('Amino_MultiLabel_Dataset.csv') 
+    print("info = : rows = ", data.shape[0], "column  = ", data.shape[1])
+    print("data without header \n\n", data)
+    column_names = []
+    for i in range(data.shape[1]):
+        column_names.append(str(i))
+    #print("done assigning column names", column_names)
+    
+    data_updated = pd.read_csv('Amino_MultiLabel_Dataset.csv', names = column_names)
+    #print("done adding headers \n")
+    #print("data updated = \n\n", data_updated)
+    #print("data columns = ", data_updated.columns)
+    #print("testing columns")
+
+    #print("data[1] = \n\n", data_updated['1'])
+
+    Y = data_updated[['20','21','22','23']]
+    print("Y = \n\n", Y)
+
+    X = data_updated.drop(columns = Y)
+    print("X = \n\n", X)
+
+    print("INFO : \n\n")
+    print("X shape : ", X.shape)
+    print("X type = ", type(X))
+    print("Y shape = : ", Y.shape)
+    print("Y type: ", type(Y))
+
+    worst_features, best_fitness, best_correct, best_incorrect = fit(5,50,X,Y)
+    X= X.drop(X.columns[worst_features], axis = 1)
+    print("features eliminated = ", worst_features)
+    print("best subset = ", X)
+    print("best fitness for these features = ", best_fitness)
+    print("best correct incorrect = ", best_correct, best_incorrect)
+    
+    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
+    accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+    y_pred = clf.predict(X_test).toarray()
+    y_test = Y_test.to_numpy()
+    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    print("Hamming accuracy info :\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("SCORE : ", score)
+    print("CORRECT : ", correct)
+    print("INCORRECT : ", incorrect)
+
+
+
+    """
+    X, y = make_multilabel_classification(n_samples = 300,n_features = 20,sparse = True, n_labels = 5,
     return_indicator = 'sparse', allow_unlabeled = False)
     X = pd.DataFrame(X.toarray())
     y = y.toarray()
@@ -241,11 +294,12 @@ if __name__ == "__main__":
     print("Y shape  = ", y.shape)
     print("cols = ", X.columns)
 
-    worst_features, best_fitness = fit(2,3,X,y)
+    worst_features, best_fitness = fit(10,20,X,y)
     X= X.drop(X.columns[worst_features], axis = 1)
     print("features eliminated = ", worst_features)
     print("best subset = ", X)
     print("best fitness for these features = ", best_fitness)
+    """
 
 
 

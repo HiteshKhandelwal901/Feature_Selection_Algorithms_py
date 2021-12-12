@@ -17,6 +17,7 @@ import pandas as pd
 from sklearn.model_selection import KFold
 from sklearn.multiclass import OneVsRestClassifier
 from scipy.stats import pearsonr
+from skmultilearn.problem_transform import BinaryRelevance
 
 
 if not sys.warnoptions:
@@ -89,21 +90,37 @@ def feature_correlation_sum(X):
 
 
 def hamming_get_accuracy(y_pred,y_test):
+    #print("y_pred = ", y_pred)
+    #print("y_test = ", y_test)
+    #print("trying with key 0\n\n")
+    #print("y_p[0] = ", y_pred[0])
+    #print("y_t[0] = ", y_test[0])
     correct = 0
+    incorrect = 0
     size = len(y_pred)*len(y_pred[0])
+    #print("y shape = ", y_pred.shape)
+    #print("size = ", size)
+    #prnt("Dsd")
     for i in range(len(y_pred)):
+        #print("i = ", i)
         y_p = y_pred[i]
+        #print("y_p = ", y_p)
         y_t = y_test[i]
         for j in range(len(y_p)):
             if y_p[j] == y_t[j]:
                 correct = correct+1
-    return correct/size
+    incorrect = size - correct
+
+    #print("correct prediction = ", correct)
+
+    return incorrect/size, correct, incorrect
 
 def hamming_scoreCV(X, y, n_splits = 5):
     kf = KFold(n_splits)
 
     #X = X.toarray()
     #y = y.toarray()
+    
 
     X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2)
     
@@ -118,10 +135,15 @@ def hamming_scoreCV(X, y, n_splits = 5):
         x_test = np.take(X_train, test , axis = 0)
         #print("x_test shape = ", x_test.shape)
         y_test = np.take(Y_train, test , axis = 0)
+        y_test = Y_test.to_numpy()
         #print("y test shape = ", y_test.shape)
-        clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=1)
+        #clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=1)
+        clf = BinaryRelevance(LogisticRegression())
         clf.fit(x_train, y_train)
-        y_pred = clf.predict(x_test)
-        score = hamming_get_accuracy(y_pred, y_test)
+        y_pred = clf.predict(x_test).toarray()
+        #print("type of y_pred = ", type(y_pred))
+        #print("y_pred = ", y_pred)
+        #print("type after conversion = ", y_pred.toarray())
+        score,correct, incorrect = hamming_get_accuracy(y_pred, y_test)
         scores.append(score)
-    return np.mean(scores)
+    return np.mean(scores),clf, correct, incorrect
