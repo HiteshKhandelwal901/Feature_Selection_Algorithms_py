@@ -7,6 +7,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score,hamming_loss
 from skmultilearn.problem_transform import BinaryRelevance
 import sklearn
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 
 """
 X, y = make_multilabel_classification(n_samples = 300,n_features = 4,sparse = True, n_labels = 3,
@@ -47,7 +49,9 @@ X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
 
 
 
-clf = BinaryRelevance(LogisticRegression())
+#clf = BinaryRelevance(LogisticRegression())
+#clf = BinaryRelevance(classifier = SVC())
+clf = BinaryRelevance(classifier = RandomForestClassifier())
 clf.fit(X_train, Y_train)
 y_pred = clf.predict(X_test).toarray()
 #print("y_pred = ", y_pred, "type = ", type(y_pred), "y pred shape = ", y_pred.shape)
@@ -62,16 +66,16 @@ print("SCORE : ", score)
 print("CORRECT : ", correct)
 print("INCORRECT : ", incorrect)
 
-score,clf2, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+#score,clf2, correct, incorrect = hamming_scoreCV(X_train,Y_train)
 
 
-y_pred = clf2.predict(X_test).toarray()
+#y_pred = clf2.predict(X_test).toarray()
 
-score, correct, incorrect = hamming_get_accuracy(y_pred, Y_test)
-print("Hamming accuracy info :\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
-print("SCORE : ", score)
-print("CORRECT : ", correct)
-print("INCORRECT : ", incorrect)
+#score, correct, incorrect = hamming_get_accuracy(y_pred, Y_test)
+#print("Hamming accuracy info :\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+#print("SCORE : ", score)
+#print("CORRECT : ", correct)
+#print("INCORRECT : ", incorrect)
 
 
 

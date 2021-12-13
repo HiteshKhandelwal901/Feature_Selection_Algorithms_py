@@ -113,7 +113,7 @@ def hamming_get_accuracy(y_pred,y_test):
 
     #print("correct prediction = ", correct)
 
-    return incorrect/size, correct, incorrect
+    return correct/size, correct, incorrect
 
 def hamming_scoreCV(X, y, n_splits = 5):
     kf = KFold(n_splits)
