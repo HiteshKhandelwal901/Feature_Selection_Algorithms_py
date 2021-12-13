@@ -266,22 +266,38 @@ if __name__ == "__main__":
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
 
-    worst_features, best_fitness, best_correct, best_incorrect = fit(5,50,X,Y)
-    X= X.drop(X.columns[worst_features], axis = 1)
-    print("features eliminated = ", worst_features)
-    print("best subset = ", X)
-    print("best fitness for these features = ", best_fitness)
-    print("best correct incorrect = ", best_correct, best_incorrect)
-    
+    print("\n\n-----without feature selection ----- \n\n")
     X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
     accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
     y_pred = clf.predict(X_test).toarray()
     y_test = Y_test.to_numpy()
     score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
-    print("Hamming accuracy info :\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("Hamming score info for without feature selection :\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
     print("SCORE : ", score)
     print("CORRECT : ", correct)
     print("INCORRECT : ", incorrect)
+    print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+
+    print("\n\n-----with feature selection ----- \n\n")
+
+    worst_features, best_fitness, best_correct, best_incorrect = fit(5,10,X,Y)
+    X= X.drop(X.columns[worst_features], axis = 1)
+    #print("features eliminated = ", worst_features)
+    #print("best fitness for these features = ", best_fitness)
+    
+    
+    
+    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
+    accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train, model_name = "SVC")
+    y_pred = clf.predict(X_test).toarray()
+    y_test = Y_test.to_numpy()
+    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    print("Hamming accuracy info SVC:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("SCORE : ", score)
+    print("CORRECT : ", correct)
+    print("INCORRECT : ", incorrect)
+    print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+    print("best subset = ", X)
 
 
 

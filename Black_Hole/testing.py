@@ -1,3 +1,4 @@
+from collections import defaultdict
 import pandas as pd
 from sklearn.datasets import make_multilabel_classification
 from sklearn.model_selection import train_test_split
@@ -9,6 +10,8 @@ from skmultilearn.problem_transform import BinaryRelevance
 import sklearn
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import KFold
+import numpy as np
 
 """
 X, y = make_multilabel_classification(n_samples = 300,n_features = 4,sparse = True, n_labels = 3,
@@ -18,6 +21,58 @@ y = y.toarray()
 print("X SHAPE  = ", X.shape,"type = ", type(X))
 print("Y shape  = ", y.shape)
 """
+
+def hamming_scoreCV_test(X, y, n_splits = 5, model_name = "Random_forest"):
+    kf = KFold(n_splits)
+
+    #X = X.toarray()
+    #y = y.toarray()
+
+    if model_name == "SVC":
+        parameter_dict = defaultdict()
+        parameter_dict['C'] = [1, 10, 100, 1000, 10000]
+        parameter_dict['sigma'] = [0.01, 0.1, 10,100, 10000]
+
+    if model_name == "Random Forest":
+        selection_list = []
+        percent_list = [0.2,0.4,0.6,0.8, 1]
+        for i in percent_list:
+            print("curr i = ", i)
+            selection_list.append(i*X.shape[1])
+        print("selection list = ", selection_list)
+        parameter_dict = defaultdict()
+        parameter_dict['depth'] = [50,100,200,500]
+        parameter_dict['Mtry'] = selection_list
+    
+
+    X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2)
+    
+    kfold = kf.split(X_train, Y_train)
+    scores = []
+    for k, (train, test) in enumerate(kfold):
+        #print("K  = ", k)
+        x_train = np.take(X_train, train , axis = 0)
+        #print("x_train shape = ", x_train.shape)
+        y_train = np.take(Y_train, train , axis = 0)
+        #print("y_train shape = ", y_train.shape)
+        x_test = np.take(X_train, test , axis = 0)
+        #print("x_test shape = ", x_test.shape)
+        y_test = np.take(Y_train, test , axis = 0)
+        y_test = Y_test.to_numpy()
+        #print("y test shape = ", y_test.shape)
+        #clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=1)
+        if model_name == "Random_forest":
+            clf = BinaryRelevance(classifier = RandomForestClassifier())
+            clf.fit(x_train, y_train)
+            y_pred = clf.predict(x_test).toarray()
+            #print("type of y_pred = ", type(y_pred))
+            #print("y_pred = ", y_pred)
+            #print("type after conversion = ", y_pred.toarray())
+            score,correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+            scores.append(score)
+    return np.mean(scores),clf, correct, incorrect
+
+
 
 data = pd.read_csv('Amino_MultiLabel_Dataset.csv') 
 column_names = []

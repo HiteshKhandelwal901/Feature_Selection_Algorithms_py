@@ -115,7 +115,7 @@ def hamming_get_accuracy(y_pred,y_test):
 
     return correct/size, correct, incorrect
 
-def hamming_scoreCV(X, y, n_splits = 5):
+def hamming_scoreCV(X, y, n_splits = 5, model_name = "Random_forest"):
     kf = KFold(n_splits)
 
     #X = X.toarray()
@@ -138,12 +138,23 @@ def hamming_scoreCV(X, y, n_splits = 5):
         y_test = Y_test.to_numpy()
         #print("y test shape = ", y_test.shape)
         #clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=1)
-        clf = BinaryRelevance(LogisticRegression())
-        clf.fit(x_train, y_train)
-        y_pred = clf.predict(x_test).toarray()
-        #print("type of y_pred = ", type(y_pred))
-        #print("y_pred = ", y_pred)
-        #print("type after conversion = ", y_pred.toarray())
-        score,correct, incorrect = hamming_get_accuracy(y_pred, y_test)
-        scores.append(score)
+        if model_name == "Random_forest":
+            clf = BinaryRelevance(classifier = RandomForestClassifier())
+            clf.fit(x_train, y_train)
+            y_pred = clf.predict(x_test).toarray()
+            #print("type of y_pred = ", type(y_pred))
+            #print("y_pred = ", y_pred)
+            #print("type after conversion = ", y_pred.toarray())
+            score,correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+            scores.append(score)
+        if model_name == "SVC":
+            clf = BinaryRelevance(classifier = SVC())
+            clf.fit(x_train, y_train)
+            y_pred = clf.predict(x_test).toarray()
+            #print("type of y_pred = ", type(y_pred))
+            #print("y_pred = ", y_pred)
+            #print("type after conversion = ", y_pred.toarray())
+            score,correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+            scores.append(score)
+
     return np.mean(scores),clf, correct, incorrect
