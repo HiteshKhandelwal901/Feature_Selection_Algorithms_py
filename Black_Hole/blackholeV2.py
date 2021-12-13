@@ -67,18 +67,19 @@ class Star:
         self.fitness = 0.0
         self.correct = 0
         self.incorrect = 0
+        self.ham_loss = 0
 
     def updateFitness(self,constant1, X, Y):
         #print("position  = ", self.pos)
-        self.fitness,self.correct,self.incorrect = self.Obj_fun(constant1, X,Y) #set this to objective function
+        self.fitness,self.correct,self.incorrect, self.ham_loss = self.Obj_fun(constant1, X,Y) #set this to objective function
   
     def Obj_fun(self, constant1, X, Y):
         #print("inside Pbjective Function")
         feature_index = self.select_features()
         #print("feature index = ", feature_index)
-        score, correct, incorrect = self.get_score(constant1,feature_index, X, Y)
+        score, correct, incorrect,ham_loss = self.get_score(constant1,feature_index, X, Y)
         #print("score = ", score)
-        return score, correct, incorrect
+        return score, correct, incorrect, ham_loss
     
     def select_features(self):
         #print("inside feature_index")
@@ -143,7 +144,7 @@ class Star:
             term_3 = get_max_label_correlations(X,Y)
             fitness = score - (constant1*term1)
             #fitness = score - term1 - (0.5*term2) + (0.5*term_3)
-            return fitness, correct, incorrect
+            return fitness, correct, incorrect, (1-score)
             #return score
         else:
             #print("X is None")
@@ -194,6 +195,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
             best_fitness = BH.fitness
             best_correct  = BH.correct
             best_incorrect = BH.incorrect
+            ham_loss = BH.ham_loss
             #print("global blackhole = ", best_BH_position, " fitness = ", best_fitness, "\n\n\n")
         else:
             pass
@@ -204,8 +206,6 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
             pop[i].updateLocation(BH)
             #print("star ", i, " new location = ", pop[i].pos)
 
-        #print("fitness of black hole in iteration {} {}".format(BH.fitness, it))
-        #print("best local black hole in iteration {} {}".format(BH.fitness, it))
 
         eventHorizon = calcEvetHorizon(BH, pop)
         #print("eventHorizon = ", eventHorizon)
@@ -216,9 +216,13 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
                 for j in range(dim):
                     pop[i].pos[j] = pop[i].random_generator()
                 #print("new random for star", i,"  = ",pop[i].pos)
+        print("constant value = ", constant1)
         print("fitness || ", best_fitness, "\n")
-        print("features selected = ",select_features_final(best_BH_position))
-        
+        features = select_features_final(best_BH_position)
+        print("hamming's loss = ", ham_loss)
+        print("number of features selected = ", (20-len(features)))
+        print("features eliminated = ", features)
+        print("\n\n")
         it = it + 1
         #break
         
@@ -227,7 +231,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
     # 
     # ("AT THE END BEST BH POSITION = ", best_BH_position)
     features = select_features_final(best_BH_position)
-    print("best BH position = ", best_BH_position)
+    #print("best BH position = ", best_BH_position)
     #print("returning features = ", features)
     
 
@@ -248,12 +252,6 @@ if __name__ == "__main__":
     #print("done assigning column names", column_names)
     
     data_updated = pd.read_csv('Amino_MultiLabel_Dataset.csv', names = column_names)
-    #print("done adding headers \n")
-    #print("data updated = \n\n", data_updated)
-    #print("data columns = ", data_updated.columns)
-    #print("testing columns")
-
-    #print("data[1] = \n\n", data_updated['1'])
 
     Y = data_updated[['20','21','22','23']]
     print("Y = \n\n", Y)
@@ -287,23 +285,23 @@ if __name__ == "__main__":
         worst_features, best_fitness, best_correct, best_incorrect = fit(c, 5,10,X,Y)
 
         #worst_features, best_fitness, best_correct, best_incorrect = fit(5,10,X,Y)
-        X= X.drop(X.columns[worst_features], axis = 1)
+        X_final= X.drop(X.columns[worst_features], axis = 1)
         #print("features eliminated = ", worst_features)
         #print("best fitness for these features = ", best_fitness)
         
         
         
-        X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
-        accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train, model_name = "SVC")
+        X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3)
+        accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
         y_pred = clf.predict(X_test).toarray()
         y_test = Y_test.to_numpy()
         score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
-        print("Hamming accuracy info SVC:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+        print("Hamming accuracy info Random Forest:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
         print("SCORE : ", score)
         print("CORRECT : ", correct)
         print("INCORRECT : ", incorrect)
         print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
-        print("best subset = ", X)
+        print("best subset = ", X_final)
 
 
 

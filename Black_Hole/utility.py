@@ -139,7 +139,7 @@ def hamming_scoreCV(X, y, n_splits = 5, model_name = "Random_forest"):
         #print("y test shape = ", y_test.shape)
         #clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=1)
         if model_name == "Random_forest":
-            clf = BinaryRelevance(classifier = RandomForestClassifier())
+            clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 42))
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_test).toarray()
             #print("type of y_pred = ", type(y_pred))
