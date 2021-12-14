@@ -1,11 +1,10 @@
 import pandas as pd
 from scipy.stats import pearsonr
+from utility import get_max_label_correlations_gen, get_max_corr_label
+from sklearn.feature_selection import VarianceThreshold
 
 
 def feature_correlation(X):
-    """
-    X is dataframe
-    """
     #print("INFO X :", X.shape, type(X))
     if X.shape[1]>1:
         #print("inside if")
@@ -68,7 +67,45 @@ if __name__ == "__main__":
 #step 2 : Caclulate the correlation matrix
 
 corr_df = feature_correlation(X)
-print("correlation matrix = ", corr_df)
+print("corr within attributes \n\n", corr_df)
+#print("correlation matrix before= ", corr_df)
+#corr_df[corr_df[0] <0.99]
+#print("correlation matrix after= ", corr_df)
+
+label_dict = get_max_label_correlations_gen(X,Y)
+#print("each atribute max corr with label\n", label_dict)
+result = get_max_corr_label(X, label_dict)
+print("-----testing ----")
+selector = VarianceThreshold(0.95)
+vt = selector.fit(X)
+#X[:, vt.variances_ > 0.95]
+#print(X)
+import numpy as np
+#print("variances = ", vt.variances_)
+idx = np.where(vt.variances_ > 50)[0]
+#print(idx)
+#print("X_removed shape = ", X_removed.shape)
+#print("X_removed = ", X_removed)
+
 
 
 #step 3 : if correlation > 0.99 add it to the list
+
+corr_matrix = X.corr().abs()
+
+# Select upper triangle of correlation matrix
+upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
+
+print("upper = ", upper)
+# Find index of feature columns with correlation greater than 0.95
+to_drop = [column for column in upper.columns if any(upper[column] > 0.095)]
+
+print("to drop = ", to_drop)
+
+    
+# Drop features 
+X = X.drop(X[to_drop], axis=1)
+
+print("X shape = ", X.shape)
+
+print(X)

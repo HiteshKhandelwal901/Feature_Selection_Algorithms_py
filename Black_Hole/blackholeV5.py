@@ -256,7 +256,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
                     pop[i].pos[j] = pop[i].random_generator()
                 #print("new random for star", i,"  = ",pop[i].pos)
         #print("constant value = ", constant1)
-        #print("fitness || ", best_fitness, "\n")
+        print("fitness || ", best_fitness, "\n")
         features = select_features_final(best_BH_position)
         print("hamming's loss = ", ham_loss)
         print("ham score = ", ham_score)
