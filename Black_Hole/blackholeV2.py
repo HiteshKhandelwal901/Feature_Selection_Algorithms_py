@@ -16,7 +16,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 20
+dim = 400
 
 
 def selectBH(stars):
@@ -68,18 +68,19 @@ class Star:
         self.correct = 0
         self.incorrect = 0
         self.ham_loss = 0
+        self.ham_Score = 0
 
     def updateFitness(self,constant1, X, Y):
         #print("position  = ", self.pos)
-        self.fitness,self.correct,self.incorrect, self.ham_loss = self.Obj_fun(constant1, X,Y) #set this to objective function
+        self.fitness,self.correct,self.incorrect, self.ham_score,self.ham_loss = self.Obj_fun(constant1, X,Y) #set this to objective function
   
     def Obj_fun(self, constant1, X, Y):
         #print("inside Pbjective Function")
         feature_index = self.select_features()
         #print("feature index = ", feature_index)
-        score, correct, incorrect,ham_loss = self.get_score(constant1,feature_index, X, Y)
+        score, correct, incorrect,ham_score,ham_loss = self.get_score(constant1,feature_index, X, Y)
         #print("score = ", score)
-        return score, correct, incorrect, ham_loss
+        return score, correct, incorrect,ham_score, ham_loss
     
     def select_features(self):
         #print("inside feature_index")
@@ -134,17 +135,17 @@ class Star:
             #print("len of selected features = ", features_selected)
             ratio = features_selected / size
             #print("ratio = ", ratio)
-            term1 = (1*(ratio))
+            term1 = (ratio)
             #print("term1 = ", term1)
-            term2 = feature_correlation_sum(X)
+            #term2 = feature_correlation_sum(X)
             #print("term2 = ", term2)
             #corr_X  = X.corr(method ='pearson').abs()
             #sum_corr_X = sum(X.corr)
             #term_2 = get_all_correlations(X,Y)
-            term_3 = get_max_label_correlations(X,Y)
+            #term_3 = get_max_label_correlations(X,Y)
             fitness = score - (constant1*term1)
             #fitness = score - term1 - (0.5*term2) + (0.5*term_3)
-            return fitness, correct, incorrect, (1-score)
+            return fitness, correct, incorrect,score, (1-score)
             #return score
         else:
             #print("X is None")
@@ -169,9 +170,14 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
     max_iter, it= num_iter, 0
     best_BH = Star()
     best_fitness = 0
+    best_BH_position = 0
+    #ham_loss = 0
+    #ham_score = 0
+
     #print("intialized blackhole position = ", BH.pos, " with fitness = ", BH.fitness)
 
     while it < max_iter:
+
         print("iloop iter || ", it)
         #For each star, evaluate the objective function
         for i in range(0, pop_number):
@@ -196,6 +202,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
             best_correct  = BH.correct
             best_incorrect = BH.incorrect
             ham_loss = BH.ham_loss
+            ham_score = BH.ham_score
             #print("global blackhole = ", best_BH_position, " fitness = ", best_fitness, "\n\n\n")
         else:
             pass
@@ -220,11 +227,12 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
         print("fitness || ", best_fitness, "\n")
         features = select_features_final(best_BH_position)
         print("hamming's loss = ", ham_loss)
-        print("number of features selected = ", (20-len(features)))
-        print("features eliminated = ", features)
+        print("hamming'score = ", ham_score )
+        print("number of features selected = ", (400-len(features)))
+        #print("features eliminated = ", features)
         print("\n\n")
         it = it + 1
-        #break
+        
         
     
     #
@@ -241,8 +249,66 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
 
 
 if __name__ == "__main__":
-    print("running driver code")
+    print("-----BENCHING ON DIPEPTIDE DATASET-------")
+    data = pd.read_csv('Dipeptide_MultiLabel_Dataset.csv')
+    print("info = : rows = ", data.shape[0], "column  = ", data.shape[1])
+    print("data without header \n\n", data)
+    column_names = []
+    for i in range(data.shape[1]):
+        column_names.append(str(i))
+    print("done assigning column names", column_names)
+    data_updated = pd.read_csv('Dipeptide_MultiLabel_Dataset.csv', names = column_names)
+    Y = data_updated[['400','401','402','403']]
+    print("Y = \n\n", Y)
 
+    X = data_updated.drop(columns = Y)
+    print("X = \n\n", X)
+
+    print("INFO : \n\n")
+    print("X shape : ", X.shape)
+    print("X type = ", type(X))
+    print("Y shape = : ", Y.shape)
+    print("Y type: ", type(Y))
+
+    print("\n\n-----without feature selection ----- \n\n")
+    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
+    accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+    y_pred = clf.predict(X_test).toarray()
+    y_test = Y_test.to_numpy()
+    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    print("Hamming score info for without feature selection :\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("SCORE : ", score)
+    print("CORRECT : ", correct)
+    print("INCORRECT : ", incorrect)
+    print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+
+    worst_features, best_fitness, best_correct, best_incorrect = fit(0.01, 5,10,X,Y)
+    X_final= X.drop(X.columns[worst_features], axis = 1)
+    #print("features eliminated = ", worst_features)
+    #print("best fitness for these features = ", best_fitness)
+    
+    
+    
+    X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3)
+    accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+    y_pred = clf.predict(X_test).toarray()
+    y_test = Y_test.to_numpy()
+    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    print("Hamming accuracy info Random Forest:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("SCORE : ", score)
+    print("CORRECT : ", correct)
+    print("INCORRECT : ", incorrect)
+    print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+    print("best subset = ", X_final)
+    
+
+
+
+
+
+
+    """
+    # -------BENCHING ON AMONIO DATASET -----
     data = pd.read_csv('Amino_MultiLabel_Dataset.csv') 
     print("info = : rows = ", data.shape[0], "column  = ", data.shape[1])
     print("data without header \n\n", data)
@@ -279,29 +345,34 @@ if __name__ == "__main__":
 
     print("\n\n-----with feature selection ----- \n\n")
     #constants range 
-    C = [0.2, 0.4, 0.6, 0.8,1]
+    C = [0.01]
+    global_max = 0
     for c in C:
         print("c = ", c)
         worst_features, best_fitness, best_correct, best_incorrect = fit(c, 5,10,X,Y)
-
-        #worst_features, best_fitness, best_correct, best_incorrect = fit(5,10,X,Y)
-        X_final= X.drop(X.columns[worst_features], axis = 1)
-        #print("features eliminated = ", worst_features)
-        #print("best fitness for these features = ", best_fitness)
-        
-        
-        
-        X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3)
-        accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
-        y_pred = clf.predict(X_test).toarray()
-        y_test = Y_test.to_numpy()
-        score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
-        print("Hamming accuracy info Random Forest:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
-        print("SCORE : ", score)
-        print("CORRECT : ", correct)
-        print("INCORRECT : ", incorrect)
-        print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
-        print("best subset = ", X_final)
+        if best_fitness > global_max:
+            global_max = best_fitness
+            global_max_c = c
+    print("optimal c = ", global_max_c)
+    worst_features, best_fitness, best_correct, best_incorrect = fit(5,10,X,Y)
+    X_final= X.drop(X.columns[worst_features], axis = 1)
+    #print("features eliminated = ", worst_features)
+    #print("best fitness for these features = ", best_fitness)
+    
+    
+    
+    X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3)
+    accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+    y_pred = clf.predict(X_test).toarray()
+    y_test = Y_test.to_numpy()
+    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    print("Hamming accuracy info Random Forest:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("SCORE : ", score)
+    print("CORRECT : ", correct)
+    print("INCORRECT : ", incorrect)
+    print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+    print("best subset = ", X_final)
+    """   
 
 
 

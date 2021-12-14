@@ -1,3 +1,4 @@
+from collections import defaultdict
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -25,6 +26,14 @@ if not sys.warnoptions:
     os.environ["PYTHONWARNINGS"] = "ignore"
 
 
+def get_index_sum(X, cols):
+    index_sum = []
+    for col in cols:
+        print("col = ", col)
+        index_sum.append(X.columns.get_loc(col))
+        print("index sum = ", index_sum)
+    return sum(index_sum)
+
 def get_max_label_correlations(X,Y):
     #print("INFO : X shape = ", X.shape)
     #print("cols  = ", X.columns)
@@ -36,6 +45,7 @@ def get_max_label_correlations(X,Y):
     max_corr = 0
     result = 0
     for cols in X.columns:
+        max_corr = 0
         #print("cols = ", cols)
         x = X[cols]
         for label in Y.columns:
@@ -50,6 +60,37 @@ def get_max_label_correlations(X,Y):
     #print("result = ", result)
     return result
 
+def get_max_label_correlations_gen(X,Y):
+    #print("INFO : X shape = ", X.shape)
+    #print("cols  = ", X.columns)
+    label_corr = defaultdict()
+    Y = pd.DataFrame(Y)
+    """
+    X -> dataframe
+    Y -> array
+    """
+    max_corr = 0
+    result = 0
+    for cols in X.columns:
+        max_corr = 0
+        #print("cols = ", cols)
+        x = X[cols]
+        for label in Y.columns:
+            #print("label = ", label)
+            y = Y[label]
+            corr, _ = pearsonr(x, y)
+            corr = abs(corr)
+            #print("corr = ", corr)
+            if corr > max_corr:
+                max_corr = corr
+        label_corr[cols] = max_corr
+    return label_corr
+
+def get_max_corr_label(X,label_corr_dict):
+    result = 0
+    for cols in X:
+        result = result + label_corr_dict[cols]
+    return result
 
 
 def feature_correlation_sum(X):
@@ -142,18 +183,12 @@ def hamming_scoreCV(X, y, n_splits = 5, model_name = "Random_forest"):
             clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 42))
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_test).toarray()
-            #print("type of y_pred = ", type(y_pred))
-            #print("y_pred = ", y_pred)
-            #print("type after conversion = ", y_pred.toarray())
             score,correct, incorrect = hamming_get_accuracy(y_pred, y_test)
             scores.append(score)
         if model_name == "SVC":
             clf = BinaryRelevance(classifier = SVC())
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_test).toarray()
-            #print("type of y_pred = ", type(y_pred))
-            #print("y_pred = ", y_pred)
-            #print("type after conversion = ", y_pred.toarray())
             score,correct, incorrect = hamming_get_accuracy(y_pred, y_test)
             scores.append(score)
 

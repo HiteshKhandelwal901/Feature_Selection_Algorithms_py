@@ -266,7 +266,7 @@ if __name__ == "__main__":
 
     print("\n\n-----with feature selection ----- \n\n")
 
-    worst_features, best_fitness, best_correct, best_incorrect = fit(5,10,X,Y)
+    worst_features, best_fitness, best_correct, best_incorrect = fit(5,25,X,Y)
     X= X.drop(X.columns[worst_features], axis = 1)
     
     
