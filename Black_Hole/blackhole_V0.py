@@ -121,11 +121,7 @@ class Star:
 
         #print("index_to_names = ", index_to_names)
         #get the column names from the feature index that has be removed from X
-        for index,col in enumerate(X.columns):
-            index_to_names[index] = col
         
-        for index in feature_index:
-            column_names.append(index_to_names[index])
         
         #print("column names = ", column_names)
 
