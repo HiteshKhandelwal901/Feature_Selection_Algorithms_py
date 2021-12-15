@@ -25,7 +25,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 40
+dim = 6
 score_cache = defaultdict()
 
 
@@ -136,7 +136,7 @@ class Star:
         
         #print("column names = ", column_names)
 
-        X = X.drop(columns = column_names)
+        X = X.drop(columns = column_names, axis = 1)
         #print("X after removing features = ", X)
         index_sum = sum(feature_index)
 
@@ -206,6 +206,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
 
     max_iter, it= num_iter, 0
     best_BH = Star()
+    best_BH_position = best_BH.pos
     best_fitness = 0
     label_dict = get_max_label_correlations_gen(X,Y)
     #print("label_dict = ", label_dict)
@@ -215,11 +216,11 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
         print("iloop iter || ", it)
         #For each star, evaluate the objective function
         for i in range(0, pop_number):
-            #print("\n\nupdating fitness for star ", i)
+            print("\n\nupdating fitness for star ", i)
             #each start you update its fitness value
             pop[i].updateFitness(label_dict,constant1,X, Y)
             pop[i].isBH = False
-            #print("Star ",i, " fitness value = ", pop[i].fitness)
+            print("Star ",i, " fitness value = \n", pop[i].fitness)
 
         #print("done updating fitness and now finding the new blackhole\n")
 
@@ -227,10 +228,14 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
         #check if the new black hole is fitter than the previous ones
         #if it  is not then 
         #print("the best local blackhole position = ", BH.pos, " Score = ", BH.fitness)
+        print("\n\nin iter {} best star promoting to BH is {}".format(it, BH.fitness))
+        print("best star position is {}\n".format(BH.pos))
         BH.isBH = True
-        #print("comapring with global black hole")
+        print("best fitness so far = {}".format(best_fitness))
+        print("best star position so far  = {}\n".format(best_BH_position))
+        print("comapring {} > {}".format(BH.fitness , best_fitness))
         if BH.fitness > best_fitness:
-            #print("found new global blackhole")
+            print("found new global blackhole")
             best_BH_position = BH.pos
             best_fitness = BH.fitness
             ham_loss = BH.ham_loss
@@ -256,11 +261,12 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
                     pop[i].pos[j] = pop[i].random_generator()
                 #print("new random for star", i,"  = ",pop[i].pos)
         #print("constant value = ", constant1)
+        print("best BH position = \n", best_BH_position)
         print("fitness || ", best_fitness, "\n")
         features = select_features_final(best_BH_position)
         print("hamming's loss = ", ham_loss)
         print("ham score = ", ham_score)
-        print("number of features selected = ", (400-len(features)))
+        print("number of features selected = ", (294-len(features)))
         #print("features eliminated = ", features)
         print("\n\n")
         it = it + 1
@@ -282,6 +288,57 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
 
 if __name__ == "__main__":
 
+    """
+    data = pd.read_csv("scene.csv")
+    print("data = \n", data)
+    Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
+    X = data.drop(columns= Y)
+    print("X = \n\n", X)
+
+    print("INFO : \n\n")
+    print("X shape : ", X.shape)
+    print("X type = ", type(X))
+    print("Y shape = : ", Y.shape)
+    print("Y type: ", type(Y))
+
+    print("\n\n-----without feature selection ----- \n\n")
+    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
+    accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+    y_pred = clf.predict(X_test).toarray()
+    y_test = Y_test.to_numpy()
+    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    print("Hamming score info for without feature selection :\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("SCORE : ", score)
+    print("CORRECT : ", correct)
+    print("INCORRECT : ", incorrect)
+    print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+    
+    print("\n\n---with feature selection------\n\n")
+    worst_features, best_fitness, ham_score, ham_loss = fit(0.01, 5,10,X,Y)
+    X_final= X.drop(X.columns[worst_features], axis = 1)
+    
+    X_final= X.drop(X.columns[worst_features], axis = 1)
+    print("features eliminated = ", worst_features)
+    print("best fitness for these features = ", best_fitness)
+
+    X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3)
+    accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+    y_pred = clf.predict(X_test).toarray()
+    y_test = Y_test.to_numpy()
+    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    print("Hamming accuracy info Random Forest:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("SCORE : ", score)
+    print("CORRECT : ", correct)
+    print("INCORRECT : ", incorrect)
+    print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+    print("best subset = ", X_final)
+    """
+
+
+
+
+
+    """
     print("-----BENCHING ON DIPEPTIDE DATASET-------")
     data = pd.read_csv('Dipeptide_MultiLabel_Dataset.csv')
     #print("info = : rows = ", data.shape[0], "column  = ", data.shape[1])
@@ -334,9 +391,9 @@ if __name__ == "__main__":
     print("INCORRECT : ", incorrect)
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     print("best subset = ", X_final)
-
-
     """
+
+    
     print("running driver code")
 
     data = pd.read_csv('Amino_MultiLabel_Dataset.csv') 
@@ -395,7 +452,7 @@ if __name__ == "__main__":
     print("INCORRECT : ", incorrect)
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     print("best subset = ", X_final)
-    """ 
+    
 
 
 

@@ -27,7 +27,7 @@ for i in range(data.shape[1]):
     column_names.append(str(i))
 #print("done assigning column names", column_names)
 data_updated = pd.read_csv('Dipeptide_MultiLabel_Dataset.csv', names = column_names)
-col = [2, 4, 5, 7, 8, 9, 12, 15, 16, 19, 23, 25, 26, 27, 30, 31, 35, 36, 38]
+col = [0, 1, 4, 6, 7, 8, 10, 13, 14, 15, 17, 20, 21, 22, 26, 27, 31, 32, 37, 42, 43, 47, 51, 59, 60, 61, 62, 63, 65, 73, 76, 78, 88, 90, 92, 94, 95, 96, 99, 102, 106, 109, 118, 123, 124, 125, 126, 127, 130, 131, 132, 133, 135, 139, 143, 146, 147, 150, 152, 153, 158, 164, 166, 167, 168, 174, 176, 179, 180, 182, 183, 184, 188, 190, 191, 193, 194, 195, 198, 209, 212, 214, 216, 223, 227, 228, 229, 237, 238, 240, 246, 249, 252, 253, 254, 255, 257, 258, 261, 264, 271, 277, 281, 284, 288, 290, 293]
 
 col_list = []
 
@@ -37,7 +37,7 @@ for c in col:
 data_updated = data_updated.drop(columns = col_list)
 print("data shape = \n", data_updated.shape)
 
-Y = data_updated[['400','401','402','403']]
+Y = data_updated[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
 print("Y = \n\n", Y)
 
 X = data_updated.drop(columns = Y)
