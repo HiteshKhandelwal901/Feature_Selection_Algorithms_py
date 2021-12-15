@@ -16,7 +16,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 20
+dim = 294
 score_cache = defaultdict()
 
 
@@ -284,7 +284,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
         features = select_features_final(global_BH.pos)
         print("hamming's loss = ", global_BH.ham_loss)
         print("ham score = ", global_BH.ham_score)
-        print("number of features selected = ", (20-len(features)))
+        print("number of features selected = ", (400-len(features)))
         #print("features eliminated = ", features)
         print("\n\n")
         it = it + 1
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     
     print("\n\n---with feature selection------\n\n")
-    worst_features, best_fitness, ham_score, ham_loss = fit(0.01, 5,10,X,Y)
+    worst_features, best_fitness, ham_score, ham_loss = fit(0.01, 10,25,X,Y)
     X_final= X.drop(X.columns[worst_features], axis = 1)
     
     X_final= X.drop(X.columns[worst_features], axis = 1)
