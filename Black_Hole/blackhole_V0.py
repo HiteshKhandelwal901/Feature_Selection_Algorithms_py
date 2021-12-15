@@ -279,12 +279,12 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
                     pop[i].pos[j] = pop[i].random_generator()
                 #print("new position for star", i,"  = ",pop[i].pos)
         #print("constant value = ", constant1)
-        print("best BH position = \n", global_BH.pos)
+        #print("best BH position = \n", global_BH.pos)
         print("fitness || ", global_BH.fitness, "\n")
         features = select_features_final(global_BH.pos)
         print("hamming's loss = ", global_BH.ham_loss)
         print("ham score = ", global_BH.ham_score)
-        print("number of features selected = ", (5-len(features)))
+        print("number of features selected = ", (20-len(features)))
         #print("features eliminated = ", features)
         print("\n\n")
         it = it + 1
@@ -306,7 +306,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
 
 if __name__ == "__main__":
 
-    """
+    
     data = pd.read_csv("scene.csv")
     print("data = \n", data)
     Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
@@ -350,7 +350,7 @@ if __name__ == "__main__":
     print("INCORRECT : ", incorrect)
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     print("best subset = ", X_final)
-    """
+    
 
 
 
@@ -411,7 +411,7 @@ if __name__ == "__main__":
     print("best subset = ", X_final)
     """
 
-    
+    """
     print("running driver code")
 
     data = pd.read_csv('Amino_MultiLabel_Dataset.csv') 
@@ -470,5 +470,5 @@ if __name__ == "__main__":
     print("INCORRECT : ", incorrect)
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     print("best subset = ", X_final)
-    
+    """
 
