@@ -12,10 +12,6 @@ from sklearn.linear_model import LogisticRegressionCV
 from sklearn.datasets import make_multilabel_classification
 from utility import hamming_scoreCV, hamming_get_accuracy, feature_correlation_sum, get_max_label_correlations, get_index_sum, get_max_label_correlations_gen, get_max_corr_label
 import sklearn
-from filters import remove_features
-
-
-
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
@@ -173,7 +169,7 @@ class Star:
             #term_3 = get_max_label_correlations(X,Y)
             term_3_eff = get_max_corr_label(X, label_dict)
             #print("term3 = ", term_3_eff)
-            fitness = score + 0.01*term_3_eff
+            fitness = score + constant1*term_3_eff
             #fitness = score - (constant1*term1)
             #fitness = score - term1 - (0.5*term2) + (0.5*term_3)
             score_cache[index_sum] = (fitness, score,1-score)
@@ -336,9 +332,10 @@ if __name__ == "__main__":
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     
     print("\n\n---with feature selection------\n\n")
-    worst_features, best_fitness, ham_score, ham_loss = fit(0.01, 10,25,X,Y)
+    worst_features, best_fitness, ham_score, ham_loss = fit(0.5, 10,25,X,Y)
     X_final= X.drop(X.columns[worst_features], axis = 1)
     
+    print("constant value  = {}".format(0.1))
     X_final= X.drop(X.columns[worst_features], axis = 1)
     print("features eliminated = ", worst_features)
     print("best fitness for these features = ", best_fitness)

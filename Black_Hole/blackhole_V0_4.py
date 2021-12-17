@@ -13,14 +13,11 @@ from sklearn.datasets import make_multilabel_classification
 from utility import hamming_scoreCV, hamming_get_accuracy, feature_correlation_sum, get_max_label_correlations, get_index_sum, get_max_label_correlations_gen, get_max_corr_label
 import sklearn
 from filters import remove_features
-
-
-
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 294
+dim = 285
 score_cache = defaultdict()
 
 
@@ -171,9 +168,9 @@ class Star:
             #sum_corr_X = sum(X.corr)
             #term_2 = get_all_correlations(X,Y)
             #term_3 = get_max_label_correlations(X,Y)
-            term_3_eff = get_max_corr_label(X, label_dict)
+            #term_3_eff = get_max_corr_label(X, label_dict)
             #print("term3 = ", term_3_eff)
-            fitness = score + 0.01*term_3_eff
+            fitness = score
             #fitness = score - (constant1*term1)
             #fitness = score - term1 - (0.5*term2) + (0.5*term_3)
             score_cache[index_sum] = (fitness, score,1-score)
@@ -288,7 +285,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
         features = select_features_final(global_BH.pos)
         print("hamming's loss = ", global_BH.ham_loss)
         print("ham score = ", global_BH.ham_score)
-        print("number of features selected = ", (400-len(features)))
+        print("number of features selected = ", (294-len(features)))
         #print("features eliminated = ", features)
         print("\n\n")
         it = it + 1
@@ -322,6 +319,9 @@ if __name__ == "__main__":
     print("X type = ", type(X))
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
+    X = remove_features(X)
+    print("removed least variance of highly correlared feature")
+    print("X now = \n", X.shape)
 
     print("\n\n-----without feature selection ----- \n\n")
     X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
@@ -336,9 +336,10 @@ if __name__ == "__main__":
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     
     print("\n\n---with feature selection------\n\n")
-    worst_features, best_fitness, ham_score, ham_loss = fit(0.01, 10,25,X,Y)
+    worst_features, best_fitness, ham_score, ham_loss = fit(0., 10,25,X,Y)
     X_final= X.drop(X.columns[worst_features], axis = 1)
     
+    print("constant value  = {}".format(0.1))
     X_final= X.drop(X.columns[worst_features], axis = 1)
     print("features eliminated = ", worst_features)
     print("best fitness for these features = ", best_fitness)
