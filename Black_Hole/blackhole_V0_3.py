@@ -12,11 +12,12 @@ from sklearn.linear_model import LogisticRegressionCV
 from sklearn.datasets import make_multilabel_classification
 from utility import hamming_scoreCV, hamming_get_accuracy, feature_correlation_sum, get_max_label_correlations, get_index_sum, get_max_label_correlations_gen, get_max_corr_label
 import sklearn
+from filters import remove_features
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 294
+dim = 285
 score_cache = defaultdict()
 
 
@@ -318,7 +319,8 @@ if __name__ == "__main__":
     print("X type = ", type(X))
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
-
+    X = remove_features(X)
+    print("removed least variance of highly correlared feature\n\n")
     print("\n\n-----without feature selection ----- \n\n")
     X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
     accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
@@ -332,7 +334,7 @@ if __name__ == "__main__":
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     
     print("\n\n---with feature selection------\n\n")
-    worst_features, best_fitness, ham_score, ham_loss = fit(0.5, 10,25,X,Y)
+    worst_features, best_fitness, ham_score, ham_loss = fit(0.05, 10,25,X,Y)
     X_final= X.drop(X.columns[worst_features], axis = 1)
     
     print("constant value  = {}".format(0.1))

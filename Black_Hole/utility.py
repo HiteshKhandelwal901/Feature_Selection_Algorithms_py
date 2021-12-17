@@ -92,6 +92,23 @@ def get_max_corr_label(X,label_corr_dict):
         result = result + label_corr_dict[cols]
     return result
 
+def weighted_label_correlations(X,Y):
+    for cols in X.columns:
+        label_corr = defaultdict()
+        #print("col = ", cols)
+        result = 0
+        x = X[cols]
+        for label in Y.columns:
+            #print("label = ", label)
+            y = Y[label]
+            corr, _ = pearsonr(x, y)
+            corr = abs(corr)
+            #print("corr = ", corr)
+            result = result + 0.25*corr
+        #print("result = ", result)
+        label_corr[cols] = result
+    return label_corr
+
 
 def feature_correlation_sum(X):
     """

@@ -19,7 +19,7 @@ from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.datasets import make_multilabel_classification
-from utility import hamming_scoreCV, hamming_get_accuracy, feature_correlation_sum, get_max_label_correlations, get_index_sum, get_max_label_correlations_gen, get_max_corr_label
+from utility import hamming_scoreCV,weighted_label_correlations, hamming_get_accuracy, feature_correlation_sum, get_max_label_correlations, get_index_sum, get_max_label_correlations_gen, get_max_corr_label
 import sklearn
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -397,7 +397,7 @@ if __name__ == "__main__":
     print("best subset = ", X_final)
     """
 
-    
+    """
     print("running driver code")
 
     data = pd.read_csv('Amino_MultiLabel_Dataset.csv') 
@@ -421,6 +421,9 @@ if __name__ == "__main__":
     print("X type = ", type(X))
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
+
+    result = weighted_label_correlations(X,Y)
+    print("result = ", result)
 
     print("\n\n-----without feature selection ----- \n\n")
     X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
@@ -456,52 +459,56 @@ if __name__ == "__main__":
     print("INCORRECT : ", incorrect)
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     print("best subset = ", X_final)
-    
-
-
-
     """
-    X, y = make_multilabel_classification(n_samples = 300,n_features = 20,sparse = True, n_labels = 5,
+
+
+
+    """ 
+    X, y = make_multilabel_classification(n_samples = 300,n_features = 3,sparse = True, n_labels = 4,
     return_indicator = 'sparse', allow_unlabeled = False)
+    print("y csr = ",y)
     X = pd.DataFrame(X.toarray())
-    y = y.toarray()
+    y = pd.DataFrame(y.toarray())
     print("X SHAPE  = ", X.shape,"type = ", type(X))
     print("Y shape  = ", y.shape)
+    print("y = ", y)
     print("cols = ", X.columns)
-
-    worst_features, best_fitness = fit(10,20,X,y)
-    X= X.drop(X.columns[worst_features], axis = 1)
-    print("features eliminated = ", worst_features)
-    print("best subset = ", X)
-    print("best fitness for these features = ", best_fitness)
+    print("y columns = ", y.columns)
+    print(weighted_label_correlations(X,y))
+    #worst_features, best_fitness = fit(10,20,X,y)
+    #X= X.drop(X.columns[worst_features], axis = 1)
+    #print("features eliminated = ", worst_features)
+    #print("best subset = ", X)
+    #print("best fitness for these features = ", best_fitness)
     """
 
 
 
 
 
-    """
+    """ 
   #---------- IRIS DATASET RESULTS ----------
     column_names = []
     data = pd.read_csv('Iris.csv')
     Y = data['Species']
     X = data.drop(columns= ['Species', 'Id'])
-
+    result = weighted_label_correlations(X,Y)
+    print("result = ", result)
     #print("X after removing features = ", X)
-    print("features information : ", X.shape)
-    print("labels information : ", Y.shape)
-    best_features, best_fitness = fit(3,3,X,Y)
+    #print("features information : ", X.shape)
+    #print("labels information : ", Y.shape)
+    #best_features, best_fitness = fit(3,3,X,Y)
     #print("best_star values = ", best_star.pos, "accuracy = ", best_star.fitness)
     #print("best subset = ", best_star.select_features())
-    X= X.drop(X.columns[best_features], axis = 1)
-    print("features eliminated = ", best_features)
-    print("best subset = ", X)
-    print("best fitness for these features = ", best_fitness)
+    #X= X.drop(X.columns[best_features], axis = 1)
+    #print("features eliminated = ", best_features)
+    #print("best subset = ", X)
+    #print("best fitness for these features = ", best_fitness)
     """
 
 
     
-    """"
+    """
     #---------BREAST-CANCER DATASET BENCHMARKING--------
     Column_names = []
     index_to_names = defaultdict()

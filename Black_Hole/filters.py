@@ -1,7 +1,10 @@
 from collections import defaultdict
 from numpy.core.fromnumeric import var
 import pandas as pd
-
+from sklearn.feature_selection import VarianceThreshold
+from sklearn.datasets import load_iris
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
 
 
 def corr_features(X):
@@ -58,6 +61,15 @@ def get_col_to_drop(X, names):
         
 
     return set(column_drop)
+
+def remove_features_with_low_variance(X):
+    sel = VarianceThreshold(threshold=(.8 * (1 - .8)))
+    X = sel.fit_transform(X)
+    return X
+
+def univariate_feature_elimination(X, k):
+    X_new = SelectKBest(chi2, k=2).fit_transform(X, y)
+    return X_new
 
 
 
