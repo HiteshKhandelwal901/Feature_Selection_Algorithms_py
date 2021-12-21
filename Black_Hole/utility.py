@@ -92,9 +92,12 @@ def get_max_corr_label(X,label_corr_dict):
         result = result + label_corr_dict[cols]
     return result
 
+
+
+
 def weighted_label_correlations(X,Y):
+    label_corr = defaultdict()
     for cols in X.columns:
-        label_corr = defaultdict()
         #print("col = ", cols)
         result = 0
         x = X[cols]
@@ -109,6 +112,34 @@ def weighted_label_correlations(X,Y):
         label_corr[cols] = result
     return label_corr
 
+def weighted_label_correlations_70_30(X,Y):
+    label_corr = defaultdict()
+    
+    for cols in X.columns:
+        corr_list = []
+        #print("col = ", cols)
+        result = 0
+        x = X[cols]
+        for label in Y.columns:
+            #print("label = ", label)
+            y = Y[label]
+            corr, _ = pearsonr(x, y)
+            corr = abs(corr)
+            #print("corr = ", corr)
+            #result = result + 0.25*corr
+        #print("result = ", result)
+            corr_list.append(corr)
+        #print("corr list = ", corr_list)
+        highest = max(corr_list)
+        #print("highrst = ", highest)
+        corr_list.sort()
+        #print("corr sorted = ", corr_list)
+        sec_highest = corr_list[-2]
+        #print("sorted corr = ", sec_highest)
+        
+        result = 0.7*highest + 0.3*sec_highest
+        label_corr[cols] = result
+    return label_corr
 
 def feature_correlation_sum(X):
     """
@@ -180,7 +211,7 @@ def hamming_scoreCV(X, y, n_splits = 5, model_name = "Random_forest"):
     #y = y.toarray()
     
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2)
+    X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2, random_state= 42)
     
     kfold = kf.split(X_train, Y_train)
     scores = []

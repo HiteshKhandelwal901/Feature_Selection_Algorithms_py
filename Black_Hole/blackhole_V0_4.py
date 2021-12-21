@@ -10,14 +10,14 @@ from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.datasets import make_multilabel_classification
-from utility import hamming_scoreCV, hamming_get_accuracy, feature_correlation_sum, get_max_label_correlations, get_index_sum, get_max_label_correlations_gen, get_max_corr_label
+from utility import weighted_label_correlations_70_30,hamming_scoreCV, hamming_get_accuracy, feature_correlation_sum, get_max_label_correlations, get_index_sum, get_max_label_correlations_gen, get_max_corr_label
 import sklearn
-from filters import remove_features
+from filters import remove_features, univariate_feature_elimination
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 285
+dim = 88
 score_cache = defaultdict()
 
 
@@ -158,7 +158,7 @@ class Star:
             score,clf,correct, incorrect = hamming_scoreCV(X, Y)
             features_selected = (size - len(feature_index))
             #print("len of selected features = ", features_selected)
-            ratio = features_selected / size
+            #ratio = features_selected / size
             #print("ratio = ", ratio)
             #term1 = (1*(ratio))
             #print("term1 = ", term1)
@@ -168,9 +168,9 @@ class Star:
             #sum_corr_X = sum(X.corr)
             #term_2 = get_all_correlations(X,Y)
             #term_3 = get_max_label_correlations(X,Y)
-            #term_3_eff = get_max_corr_label(X, label_dict)
+            term_3_eff = get_max_corr_label(X, label_dict)
             #print("term3 = ", term_3_eff)
-            fitness = score
+            fitness = score + constant1*term_3_eff
             #fitness = score - (constant1*term1)
             #fitness = score - term1 - (0.5*term2) + (0.5*term_3)
             score_cache[index_sum] = (fitness, score,1-score)
@@ -210,7 +210,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
     #print("default global pos = \n\n", global_BH.pos)
     #best_BH_position = best_BH.pos
     #best_fitness = 0
-    label_dict = get_max_label_correlations_gen(X,Y)
+    label_dict = weighted_label_correlations_70_30(X,Y)
     #print("label_dict = ", label_dict)
     #print("intialized blackhole position = ", BH.pos, " with fitness = ", BH.fitness)
 
@@ -307,7 +307,67 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
 
 if __name__ == "__main__":
 
-    
+    print("YEAST CSV BH THIRD TERM 20 STARS 50 ITERATIONS")
+
+    data = pd.read_csv("yeast_clean.csv")
+    print("data = \n", data)
+    Y = data[['Class1','Class2','Class3','Class4','Class5','Class6','Class7','Class8','Class9','Class10','Class11','Class12','Class13','Class14']]
+    X = data.drop(columns= Y)
+    print("X = \n\n", X)
+
+    print("INFO : \n\n")
+    print("X shape : ", X.shape)
+    print("X type = ", type(X))
+    print("Y shape = : ", Y.shape)
+    print("Y type: ", type(Y))
+    #X = remove_features(X)
+    scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
+    X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
+    X = univariate_feature_elimination(X,Y,15)
+    #X = remove_features(X)
+    print("removed least variance of highly correlared feature")
+    print("X now = \n", X)
+    #print("-------- YEAST CLEAN WITH 20 STARS  DFAULT CV  50 iterations-------")
+    print("\n\n-----without feature selection ----- \n\n")
+    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3, random_state= 42)
+    accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+    y_pred = clf.predict(X_test).toarray()
+    y_test = Y_test.to_numpy()
+    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    print("Hamming score info for without feature selection :\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("SCORE : ", score)
+    print("CORRECT : ", correct)
+    print("INCORRECT : ", incorrect)
+    print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+
+    print("\n\n---with feature selection------\n\n")
+    worst_features, best_fitness, ham_score, ham_loss = fit(0.05, 20,50,X,Y)
+    X_final= X.drop(X.columns[worst_features], axis = 1)
+
+    print("constant value  = {}".format(0.1))
+    X_final= X.drop(X.columns[worst_features], axis = 1)
+    print("features eliminated = ", worst_features)
+    print("best fitness for these features = ", best_fitness)
+
+    X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3, random_state= 42)
+    accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+    y_pred = clf.predict(X_test).toarray()
+    y_test = Y_test.to_numpy()
+    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    print("Hamming accuracy info Random Forest:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    print("SCORE : ", score)
+    print("CORRECT : ", correct)
+    print("INCORRECT : ", incorrect)
+    print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+    print("best subset = ", X_final)
+
+
+
+
+
+
+
+    """
     data = pd.read_csv("scene.csv")
     print("data = \n", data)
     Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
@@ -319,12 +379,13 @@ if __name__ == "__main__":
     print("X type = ", type(X))
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
-    X = remove_features(X)
+    #X = remove_features(X)
+    X = univariate_feature_elimination(X,Y,15)
     print("removed least variance of highly correlared feature")
     print("X now = \n", X.shape)
-
+    print("YEAST CSV BH THIRD TERM 20 STARS 50 ITERATIONS")
     print("\n\n-----without feature selection ----- \n\n")
-    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
+    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3, random_state= 42)
     accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
     y_pred = clf.predict(X_test).toarray()
     y_test = Y_test.to_numpy()
@@ -336,7 +397,7 @@ if __name__ == "__main__":
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     
     print("\n\n---with feature selection------\n\n")
-    worst_features, best_fitness, ham_score, ham_loss = fit(0., 10,25,X,Y)
+    worst_features, best_fitness, ham_score, ham_loss = fit(0.05, 15,20,X,Y)
     X_final= X.drop(X.columns[worst_features], axis = 1)
     
     print("constant value  = {}".format(0.1))
@@ -344,7 +405,7 @@ if __name__ == "__main__":
     print("features eliminated = ", worst_features)
     print("best fitness for these features = ", best_fitness)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3)
+    X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3, random_state= 42)
     accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
     y_pred = clf.predict(X_test).toarray()
     y_test = Y_test.to_numpy()
@@ -355,7 +416,7 @@ if __name__ == "__main__":
     print("INCORRECT : ", incorrect)
     print("hamming's loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
     print("best subset = ", X_final)
-    
+    """
 
 
 

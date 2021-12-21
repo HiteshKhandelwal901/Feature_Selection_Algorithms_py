@@ -5,6 +5,7 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.datasets import load_iris
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
+from operator import itemgetter
 
 
 def corr_features(X):
@@ -67,10 +68,33 @@ def remove_features_with_low_variance(X):
     X = sel.fit_transform(X)
     return X
 
-def univariate_feature_elimination(X, k):
-    X_new = SelectKBest(chi2, k=2).fit_transform(X, y)
-    return X_new
+def univariate_feature_elimination(X,y, k):
+    sk = SelectKBest(score_func=chi2, k=4)
+    X_new = sk.fit_transform(X,y)
+    #print("X = ",X)
+    scores = sk.scores_
+    #print("score = \n", scores, "type = ", type(scores), "shape = ", scores.shape)
+    columns_to_drop = get_least_columns(X, scores,k)
+    X = X.drop(columns = columns_to_drop)
+    return X
 
+def get_least_columns(X, scores,k):
+    columns_to_remove = []
+    names = defaultdict()
+    for index,col in enumerate(X.columns):
+        names[col] = scores[index]
+    remove_dic = dict(sorted(names.items(), key = itemgetter(1))[:k])
+    #print("remove dic = \n", remove_dic)
+
+    for keys in remove_dic:
+        columns_to_remove.append(keys)
+    return columns_to_remove
+        
+
+
+
+
+    
 
 
 
