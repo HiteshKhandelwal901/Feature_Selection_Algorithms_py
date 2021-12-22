@@ -170,7 +170,7 @@ class Star:
             #term_3 = get_max_label_correlations(X,Y)
             #term_3_eff = get_max_corr_label(X, label_dict)
             #parint("term3 = ", term_3_eff)
-            fitness = score / (1 + (0.075*features_selected))
+            fitness = score / (1 + (0.2*features_selected))
             #fitness = score - (constant1*term1)
             #fitness = score - term1 - (0.5*term2) + (0.5*term_3)
             score_cache[index_sum] = (fitness, score,1-score)
