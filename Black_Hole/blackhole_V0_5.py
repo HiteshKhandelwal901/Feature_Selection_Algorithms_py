@@ -330,10 +330,15 @@ if __name__ == "__main__":
     print("-------- YEAST CLEAN WITH 20 STARS  DFAULT CV  50 iterations-------")
     print("\n\n-----without feature selection ----- \n\n")
     X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3, random_state= 42)
+    print("universal X train shape (before passing to cv)= ", X_train.shape)
+
+
     accuracy, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
     y_pred = clf.predict(X_test).toarray()
     y_test = Y_test.to_numpy()
     score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+
+
     print("Hamming score info for without feature selection :\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
     print("SCORE : ", score)
     print("CORRECT : ", correct)

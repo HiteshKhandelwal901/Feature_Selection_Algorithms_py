@@ -187,6 +187,7 @@ def hamming_get_accuracy(y_pred,y_test):
     correct = 0
     incorrect = 0
     size = len(y_pred)*len(y_pred[0])
+    #print("size = ", size)
     #print("y shape = ", y_pred.shape)
     #print("size = ", size)
     #prnt("Dsd")
@@ -205,14 +206,17 @@ def hamming_get_accuracy(y_pred,y_test):
     return correct/size, correct, incorrect
 
 def hamming_scoreCV(X, y, n_splits = 5, model_name = "Random_forest"):
+    #print("INSIDE HAMMING SCORE CV RECIVED X = ", X.shape)
     kf = KFold(n_splits)
 
     #X = X.toarray()
     #y = y.toarray()
-    
+    X_train = X
+    Y_train = y
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2, random_state= 42)
-    
+    #X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2, random_state= 42)
+    #print("Splitting the recieved X in hamming_Score_CV before fold run | X_train and X_test= ", X_train.shape, X_test.shape)
+    # print("X train inside hamming function ", X_train.shape)
     kfold = kf.split(X_train, Y_train)
     scores = []
     for k, (train, test) in enumerate(kfold):
@@ -224,14 +228,16 @@ def hamming_scoreCV(X, y, n_splits = 5, model_name = "Random_forest"):
         x_test = np.take(X_train, test , axis = 0)
         #print("x_test shape = ", x_test.shape)
         y_test = np.take(Y_train, test , axis = 0)
-        y_test = Y_test.to_numpy()
+        y_test = y_test.to_numpy()
         #print("y test shape = ", y_test.shape)
         #clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=1)
         if model_name == "Random_forest":
+            #print("inside random forest")
             clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 42))
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_test).toarray()
             score,correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+            #print("score = ", score, "correct = ", correct, "incorrect = ", incorrect)
             scores.append(score)
         if model_name == "SVC":
             clf = BinaryRelevance(classifier = SVC())
