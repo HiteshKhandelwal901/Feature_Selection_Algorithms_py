@@ -108,9 +108,63 @@ class Star:
             rand_num = self.random_generator()
             self.pos[i] += rand_num * (BH.pos[i] - self.pos[i])
         
-    def random_generator(self):
-        num = random.uniform(0, 1)
-        return num
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def get_score(self, label_dict, constant1, feature_index, X, Y):
         #print("feature_index = ", feature_index)

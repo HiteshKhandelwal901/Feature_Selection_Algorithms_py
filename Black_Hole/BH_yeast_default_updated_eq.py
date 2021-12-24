@@ -170,7 +170,7 @@ class Star:
             #term_3 = get_max_label_correlations(X,Y)
             #term_3_eff = get_max_corr_label(X, label_dict)
             #print("term3 = ", term_3_eff)
-            fitness = score / 1+ (0.075 * features_selected)
+            fitness = score / 1+ (0.4 * features_selected)
             #fitness = score - (constant1*term1)
             #fitness = score - term1 - (0.5*term2) + (0.5*term_3)
             score_cache[index_sum] = (fitness, score,1-score)
@@ -285,11 +285,11 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
         features = select_features_final(global_BH.pos)
         print("hamming's loss = ", global_BH.ham_loss)
         print("ham score = ", global_BH.ham_score)
-        print("number of features selected = ", (294-len(features)))
+        print("number of features selected = ", (dim-len(features)))
         #print("features eliminated = ", features)
         print("\n\n")
         it = it + 1
-    
+        break
         
     
     #
@@ -329,22 +329,15 @@ if __name__ == "__main__":
     print("X now = \n", X)
     #print("-------- YEAST CLEAN WITH 20 STARS  DFAULT CV  50 iterations-------")
     
-    print("\n\n-----without feature selection ----- \n\n")
+    print("\n\n----- without feature selection lambda = 0.4 ----- \n\n")
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3, random_state= 42)
     #print("X_train shape = \n", X_train.shape)
-    traincv, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
-    y_pred = clf.predict(X_test).toarray()
-    y_test = Y_test.to_numpy()
-    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    traincv, clf, correct, incorrect = hamming_scoreCV(X,Y)
     print("TRAINCV SCORE :", traincv)
-    print("TRAINCV LOSS :", 1-traincv)
-    print("TEST SCORE : ", score)
-    print("TEST loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
 
     
     
-    print("\n\n---with feature selection------\n\n")
+    print("\n\n---with feature selection------ lambda = 0.2 \n\n")
 
     worst_features, best_fitness, ham_score, ham_loss = fit(0.05, 20,50,X,Y)
     X_final= X.drop(X.columns[worst_features], axis = 1)
@@ -370,3 +363,7 @@ if __name__ == "__main__":
     #print("TEST INCORRECT : ", incorrect)
     
     print("best subset = ", X_final)
+    print("best columns = ", X_final.columns)
+    print("column length  = ", len(X_final.columns))
+
+    

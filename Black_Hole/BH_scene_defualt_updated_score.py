@@ -289,6 +289,7 @@ def fit(constant1,num_of_samples,num_iter, X, Y):
         #print("features eliminated = ", features)
         print("\n\n")
         it = it + 1
+        break
     
         
     
@@ -320,41 +321,38 @@ if __name__ == "__main__":
     #X = remove_features(X)
     X = univariate_feature_elimination(X,Y,15)
     print("after ch^2 elimination\n", X)
-    print("removed least variance of highly correlared feature\n\n")
+    print("removed 15 least variance of highly correlared feature\n\n")
 
     print("\n\n-----without feature selection ----- \n\n")
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.3)
-    traincv, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
-    y_pred = clf.predict(X_test).toarray()
-    y_test = Y_test.to_numpy()
-    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
-    print("TRAIN SCORE :", traincv)
-    print("TRAIN LOSS :", 1-traincv)
-    print("TEST SCORE : ", score)
-    print("TEST loss  = ",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+    traincv, clf, correct, incorrect = hamming_scoreCV(X,Y)
+    print("trainCV hamming's loss :", 1-traincv)
 
-    print("\n\n---with feature selection------\n\n")
+    print("\n\n---with feature selection lambda = 0.4------\n\n")
 
-    worst_features, best_fitness, ham_score, ham_loss = fit(0.05, 20,50,X,Y)
+    worst_features, best_fitness, ham_score, ham_loss = fit(0.05, 10,20,X,Y)
+    print("trainCv hamming's loss : ", ham_loss)
     X_final= X.drop(X.columns[worst_features], axis = 1)
-    
-    print("constant value  = {}".format(0.1))
     X_final= X.drop(X.columns[worst_features], axis = 1)
     print("features eliminated = ", worst_features)
     print("best fitness for these features = ", best_fitness)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3)
-    trainCV, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
-    y_pred = clf.predict(X_test).toarray()
-    y_test = Y_test.to_numpy()
-    score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
-    print("BH SCENE DEFUALT CV")
-    print("Hamming accuracy info Random Forest:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
-    print("TEST SCORE  : ", score)
-    print("TRAIN SCORE : ", trainCV)
-    print("TRAIN LOSS  : ", 1-trainCV)
-    print("TEST loss   :",sklearn.metrics.hamming_loss(Y_test, y_pred) )
+    #X_train, X_test, Y_train, Y_test = train_test_split(X_final,Y, test_size = 0.3)
+    #trainCV, clf, correct, incorrect = hamming_scoreCV(X_train,Y_train)
+    #y_pred = clf.predict(X_test).toarray()
+    #y_test = Y_test.to_numpy()
+    #score, correct, incorrect = hamming_get_accuracy(y_pred, y_test)
+    #print("BH SCENE DEFUALT CV")
+    #print("Hamming accuracy info Random Forest:\n score = {} \n incorrect prediction = {}".format(score,sklearn.metrics.hamming_loss(Y_test, y_pred)))
+    #print("TEST SCORE  : ", score)
+    #print("TRAIN SCORE : ", trainCV)
+    #print("TRAIN LOSS  : ", 1-trainCV)
+    #print("TEST loss   :",sklearn.metrics.hamming_loss(Y_test, y_pred) )
 
     
     print("best subset = ", X_final)
+    print("best attr = ", X_final.columns)
+    print("len = ", len(X_final.columns))
+    df = pd.concat((X_final, Y), axis = 1)
+
+    df.to_csv('best_subset.csv')
