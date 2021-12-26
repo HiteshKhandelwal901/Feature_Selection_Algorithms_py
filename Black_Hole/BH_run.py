@@ -8,5 +8,9 @@ if __name__ == "__main__":
 
     Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
     X = data.drop(columns= Y)
+    X = X.iloc[:, 1:]
+
+    print(X)
+    print(Y)
 
     score, clf, correct, incorrect = hamming_scoreCV(X, Y)

@@ -259,7 +259,7 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    df.to_csv('best_subset.csv')
+    df.to_csv('BH_bipirate.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
@@ -274,7 +274,7 @@ if __name__ == "__main__":
     X = data.drop(columns= Y)
     
     #uncomment to run with chi^2
-    #X = univariate_feature_elimination(X,Y,15)
+    X = univariate_feature_elimination(X,Y,15)
 
 
     #print the information about X and Y
@@ -295,4 +295,4 @@ if __name__ == "__main__":
     print("\n\n---with feature selection lambda = 0.4------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    X_subset , ham_score, ham_loss = fit(15,20,X,Y)
+    X_subset , ham_score, ham_loss = fit(20,50,X,Y)

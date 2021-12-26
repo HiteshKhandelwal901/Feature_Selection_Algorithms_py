@@ -114,7 +114,7 @@ def distance_correlation_dict_gen(X, Y):
     cordix_matr = get_distance_corrlation_matrix(X,Y)
     label_weights = get_label_weights(Y)
     Weighted_cordix = get_weighted_cordix(cordix_matr, label_weights)
-    print("weigthes_cordix = \n", Weighted_cordix)
+    #print("weigthes_cordix = \n", Weighted_cordix)
     for index, col in enumerate(X.columns):
         row = Weighted_cordix[index]
         dist_corr[col] = sum(row)

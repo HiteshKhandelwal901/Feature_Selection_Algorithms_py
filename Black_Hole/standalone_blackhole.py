@@ -259,7 +259,7 @@ if __name__ == "__main__":
     #uncomment to run with chi^2
     #X = univariate_feature_elimination(X,Y,15)
 
-
+    print("running without ch^2")
     #print the information about X and Y
     print("INFO : \n\n")
     print("X shape : ", X.shape)
@@ -278,4 +278,4 @@ if __name__ == "__main__":
     print("\n\n---with feature selection lambda = 0.4------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    X_subset , ham_score, ham_loss = fit(15,20,X,Y)
+    X_subset , ham_score, ham_loss = fit(20,50,X,Y)
