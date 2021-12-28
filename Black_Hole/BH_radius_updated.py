@@ -18,7 +18,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 57
+dim = 279
 score_cache = defaultdict()
 
 
@@ -151,7 +151,7 @@ class Star:
             #correlation distance sum for the subset attributes
             corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
-            fitness = (score / (1 + (0.5*features_selected))) - (0.5*corr_dist_sum)
+            fitness = (score / (1 + (10*features_selected))) - (0.5*corr_dist_sum)
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
             score_cache[index_sum] = (fitness, score,1-score)
             return fitness, score, (1-score)
@@ -196,6 +196,7 @@ def fit(num_of_samples,num_iter, X, Y):
 
     #get the bipirate distance_correlation dictionary for all ( X,Y)
     label_dict = distance_correlation_dict_gen(X,Y)
+    horizon_parameter = 0.8
 
     #start the loop
     while it < max_iter:
@@ -229,11 +230,12 @@ def fit(num_of_samples,num_iter, X, Y):
 
         #get tje event horizon        
         eventHorizon = calcEvetHorizon(global_BH, pop)
+        print("eventHorizon = \n", eventHorizon)
         
 
         #if in event horizon, reintialize stars randomly
         for i in range(pop_number):
-            if isCrossingEventHorizon(global_BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
+            if isCrossingEventHorizon(global_BH, pop[i], horizon_parameter) == True and pop[i].isBH == False:
                 for j in range(dim):
                     pop[i].pos[j] = pop[i].random_generator()
 
@@ -258,13 +260,12 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    df.to_csv('BH_bipirate_emotions_lam0.5.csv')
+    df.to_csv('BH_bipirate_lam10.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
 
 if __name__ == "__main__":
-    """
 
     #Reading the data into Dataframe
     data = pd.read_csv("scene.csv")
@@ -285,46 +286,14 @@ if __name__ == "__main__":
     print("Y type: ", type(Y))
  
     #Run without BH, just the random forest CV
-    print("\n\n-----without feature selection lambda = 5----- \n\n")
+    print("\n\n-----without feature selection lambda = 10----- \n\n")
     
     #Get trainCV score and subract it from 1 to get loss
     CVscore, clf, correct, incorrect = hamming_scoreCV(X,Y)
     print("trainCV hamming's loss :", 1-CVscore)
     
     #Run with BH
-    print("\n\n---with feature selection lambda = 5------\n\n")
-    
-    #Get the fitness, ham score, ham loss and the worst features
-    X_subset , ham_score, ham_loss = fit(20,50,X,Y)
-    """
-
-    data = pd.read_csv('emotions_clean.csv')
-    print("data = ", data)
-    X = data.iloc[:, :-6]
-    Y = data.iloc[:, -6:]
-    print("X = \n", X)
-    print("Y = \n", Y)
-    scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
-    X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
-    X = univariate_feature_elimination(X,Y,15)
-
-
-    #print the information about X and Y
-    print("INFO after CH2: \n\n")
-    print("X shape : ", X.shape)
-    print("X type = ", type(X))
-    print("Y shape = : ", Y.shape)
-    print("Y type: ", type(Y))
-
-    #Run without BH, just the random forest CV
-    print("\n\n-----without feature selection lambda = 0.5----- \n\n")
-    
-    #Get trainCV score and subract it from 1 to get loss
-    CVscore, clf, correct, incorrect = hamming_scoreCV(X,Y)
-    print("trainCV hamming's loss :", 1-CVscore)
-    
-    #Run with BH
-    print("\n\n---with feature selection lambda = 0.5------\n\n")
+    print("\n\n---with feature selection lambda = 10------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
     X_subset , ham_score, ham_loss = fit(20,50,X,Y)
