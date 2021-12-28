@@ -196,7 +196,7 @@ def fit(num_of_samples,num_iter, X, Y):
 
     #get the bipirate distance_correlation dictionary for all ( X,Y)
     label_dict = distance_correlation_dict_gen(X,Y)
-    horizon_parameter = 0.8
+    horizon_parameter = 0.08
 
     #start the loop
     while it < max_iter:
@@ -247,7 +247,13 @@ def fit(num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         it = it + 1
+        break
     
+    for i in range(len(pop)):
+        pos = pop[i].pos
+        print("star {} first 50 pos = \n".format(pop[i].name, pos[0:50] ))
+    print("BH pos = \n\n")
+    print(global_BH.pos)
     #Done training
     worst_features = select_worst_features(global_BH.pos)
     X_final= X.drop(X.columns[worst_features], axis = 1)
@@ -260,7 +266,7 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    df.to_csv('BH_bipirate_lam10.csv')
+    df.to_csv('BH_bipirate_radius_updated_lam10.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
