@@ -247,11 +247,11 @@ def fit(num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         it = it + 1
-        break
-    
+        
+
     for i in range(len(pop)):
         pos = pop[i].pos
-        print("star {} first 50 pos = \n".format(pop[i].name, pos[0:50] ))
+        print("star {} first 50 pos = {} \n".format(pop[i].name, pos[0:50] ))
     print("BH pos = \n\n")
     print(global_BH.pos)
     #Done training

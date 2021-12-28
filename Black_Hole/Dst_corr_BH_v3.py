@@ -245,7 +245,7 @@ def fit(num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         it = it + 1
-        break
+        
 
     #print BH and stars position
     for i in range(len(pop)):
