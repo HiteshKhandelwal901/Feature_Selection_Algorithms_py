@@ -106,7 +106,7 @@ class Star:
     def updateLocation(self, BH):
         for i in range(len(self.pos)):
             rand_num = self.random_generator()
-            self.pos[i] += 0.7*rand_num * (BH.pos[i]-self.pos[i])
+            self.pos[i] += 0.4*rand_num * (BH.pos[i]-self.pos[i])
 
             #print("after update pos = ", self.pos[i])
         
@@ -267,9 +267,7 @@ def fit(num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         print("converting BH to binary")
-        if it>=10 and it%10 == 0:
-            global_BH.pos = binary_pos(global_BH.pos)
-            print("after conversion  = \n", global_BH.pos)
+
         it = it + 1
     
     print("sample star pos = ", pop[12].pos)
@@ -287,7 +285,7 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    df.to_csv('BH_bipirate_constant_random0.2.csv')
+    df.to_csv('BH_bipirate_constant_random0.4.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
@@ -314,7 +312,7 @@ if __name__ == "__main__":
     print("Y type: ", type(Y))
  
     #Run without BH, just the random forest CV
-    print("\n\n-----without feature selection lambda = 10, C = 0.7----- \n\n")
+    print("\n\n-----without feature selection lambda = 10, C = 0.4----- \n\n")
     
     #Get trainCV score and subract it from 1 to get loss
     #CVscore, clf, correct, incorrect = hamming_scoreCV(X,Y)
