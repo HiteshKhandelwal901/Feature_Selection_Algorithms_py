@@ -33,7 +33,7 @@ def get_index_sum(X, cols):
 def selectBH(stars):
     """Returns index of star which became black hole"""
     tmp = Star("temp")
-    tmp.fitness = 0
+    tmp.fitness = -10000000
     it = 0
     bhNum = 0
     for star in stars:
@@ -229,16 +229,21 @@ def fit(num_of_samples,num_iter, X, Y):
 
         #get the best star in this current iteration
         local_BH = pop[selectBH(pop)]
+        print("local_BH  name = {} || {}".format(local_BH.name, local_BH.fitness))
 
         #if the best star in this iteration is fitter than global make that global
+        print("checking if {} > {}".format(local_BH.fitness, global_BH.fitness))
         if local_BH.fitness > global_BH.fitness:
+            print("true, new global BH found")
             global_BH.isBH = False
             global_BH = local_BH
             global_BH.isBH = True
+            print("global_bh name = {} || {}".format(global_BH.name, global_BH.fitness)) 
         else:
+            print("false, same old global blackhole name = {} || {}".format(global_BH.name, global_BH.fitness))
             pass
 
-        print("global_bh name = {} || {}".format(global_BH.name, global_BH.fitness)) 
+        
         #update the location of other stars
         print("updating location of other stars")
         for i in range(pop_number):
@@ -273,7 +278,7 @@ def fit(num_of_samples,num_iter, X, Y):
             print("after conversion  = \n", global_BH.pos)
         it = it + 1
     
-    print("sample star pos = ", pop[12].pos)
+    print("sample star pos = ", pop[8].pos)
     print("blackhole pos = ", global_BH.pos)
     #Done training
     worst_features = select_worst_features(global_BH.pos)
