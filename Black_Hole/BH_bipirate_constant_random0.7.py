@@ -105,19 +105,8 @@ class Star:
     
     def updateLocation(self, BH):
         for i in range(len(self.pos)):
-            #print("dim {}".format(i))
             rand_num = self.random_generator()
-            #rand_vec = self.random_generator_vector()
-            #print('rand_num = ', rand_vec)
-            #print("length = ", len(rand_vec))
-            #print("after sub = , ", (BH.pos[i] - self.pos[i]))
-            #self.pos[i] += rand_num * (BH.pos[i] - self.pos[i])
-            #print("random num {}".format(rand_num))
-            #print("finding euclidian distance between {}, {}".format(BH.pos[i], self.pos[i]))
-            #print("euclidian dist = {}".format(euclid_dist(BH.pos[i], self.pos[i])))
-            #print("normal subraction is {} ".format((BH.pos[i]-self.pos[i])))
-            #self.pos[i] += rand_num * euclid_dist(BH.pos[i], self.pos[i])
-            self.pos[i] += rand_num * (BH.pos[i]-self.pos[i])
+            self.pos[i] += 0.7*rand_num * (BH.pos[i]-self.pos[i])
 
             #print("after update pos = ", self.pos[i])
         
@@ -224,7 +213,7 @@ def fit(num_of_samples,num_iter, X, Y):
 
     #get the bipirate distance_correlation dictionary for all ( X,Y)
     label_dict = distance_correlation_dict_gen(X,Y)
-    print("lable_dict = \n", label_dict)
+    #print("lable_dict = \n", label_dict)
 
     #start the loop
     while it < max_iter:
@@ -253,9 +242,9 @@ def fit(num_of_samples,num_iter, X, Y):
         #update the location of other stars
         for i in range(pop_number):
             if pop[i].isBH == False:
-                print("updating {} location".format(pop[i].name))
+                #print("updating {} location".format(pop[i].name))
                 pop[i].updateLocation(global_BH)
-                print("new position = {}".format(pop[i].pos))
+                #print("new position = {}".format(pop[i].pos))
                
             else:
                 pass
@@ -278,19 +267,18 @@ def fit(num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         print("converting BH to binary")
-        if it%10 == 0:
+        if it>=10 and it%10 == 0:
             global_BH.pos = binary_pos(global_BH.pos)
             print("after conversion  = \n", global_BH.pos)
         it = it + 1
     
-    print("sample star pos = ", pop[2].pos)
+    print("sample star pos = ", pop[12].pos)
     print("blackhole pos = ", global_BH.pos)
     #Done training
     worst_features = select_worst_features(global_BH.pos)
     X_final= X.drop(X.columns[worst_features], axis = 1)
 
-    for i in range(len(pop)):
-        print("final star {} || position = \n {}".format(pop[i].name, pop[i].fitness))
+    
     
 
     print("---END OF ALGORITHM-----\\n\n")
@@ -299,7 +287,7 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    #df.to_csv('BH_bipirate_bh_updated_eq_lam10.csv')
+    df.to_csv('BH_bipirate_constant_random0.2.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
@@ -326,14 +314,14 @@ if __name__ == "__main__":
     print("Y type: ", type(Y))
  
     #Run without BH, just the random forest CV
-    print("\n\n-----without feature selection lambda = 10----- \n\n")
+    print("\n\n-----without feature selection lambda = 10, C = 0.7----- \n\n")
     
     #Get trainCV score and subract it from 1 to get loss
     #CVscore, clf, correct, incorrect = hamming_scoreCV(X,Y)
     #print("trainCV hamming's loss :", 1-CVscore)
     
     #Run with BH
-    print("\n\n---with feature selection lambda = 10------\n\n")
+    print("\n\n---with feature selection lambda = 10 0.7------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    X_subset , ham_score, ham_loss = fit(3,5,X,Y)
+    X_subset , ham_score, ham_loss = fit(20,50,X,Y)
