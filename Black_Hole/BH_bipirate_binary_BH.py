@@ -33,7 +33,7 @@ def get_index_sum(X, cols):
 def selectBH(stars):
     """Returns index of star which became black hole"""
     tmp = Star("temp")
-    tmp.fitness = 0
+    tmp.fitness = -10000000
     it = 0
     bhNum = 0
     for star in stars:

@@ -33,7 +33,7 @@ def get_index_sum(X, cols):
 def selectBH(stars):
     """Returns index of star which became black hole"""
     tmp = Star("temp")
-    tmp.fitness = 0
+    tmp.fitness = -10000
     it = 0
     bhNum = 0
     for star in stars:
@@ -267,7 +267,9 @@ def fit(num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         print("converting BH to binary")
-
+        if it>=10 and it%10 == 0:
+            global_BH.pos = binary_pos(global_BH.pos)
+            print("after conversion  = \n", global_BH.pos)
         it = it + 1
     
     print("sample star pos = ", pop[12].pos)
@@ -285,7 +287,7 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    df.to_csv('BH_bipirate_constant_random0.4.csv')
+    df.to_csv('BH_bipirate_constant_random0.4_with_binary.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 

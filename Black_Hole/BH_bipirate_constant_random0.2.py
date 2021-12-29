@@ -33,7 +33,7 @@ def get_index_sum(X, cols):
 def selectBH(stars):
     """Returns index of star which became black hole"""
     tmp = Star("temp")
-    tmp.fitness = 0
+    tmp.fitness = -1000000
     it = 0
     bhNum = 0
     for star in stars:
@@ -266,10 +266,6 @@ def fit(num_of_samples,num_iter, X, Y):
         print("number of features selected = ", (dim-len(features)))
 
         print("\n\n")
-        print("converting BH to binary")
-        if it>=10 and it%10 == 0:
-            global_BH.pos = binary_pos(global_BH.pos)
-            print("after conversion  = \n", global_BH.pos)
         it = it + 1
     
     print("sample star pos = ", pop[12].pos)
