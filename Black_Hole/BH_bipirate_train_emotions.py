@@ -172,7 +172,8 @@ class Star:
             corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
             #fitness = (score / (1 + (0.2*features_selected))) - (0.5*corr_dist_sum)
-            fitness = (score ) - (0.5*corr_dist_sum)
+            #fitness = (score ) - (0.5*corr_dist_sum)
+            fitness = (score )
             #print("fitness = \n", fitness)
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
             score_cache[index_sum] = (fitness, score,1-score)
