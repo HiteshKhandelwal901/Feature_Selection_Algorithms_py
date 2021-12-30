@@ -1,10 +1,10 @@
 import pandas as pd 
-from utility import hamming_scoreCV
+from utility import hamming_score, hamming_scoreCV
 
 
 
 if __name__ == "__main__":
-    data = pd.read_csv('subset_data/BH_bipirate.csv')
+    data = pd.read_csv('BH_bipirate_binary_BH_train_test.csv')
 
     Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
     X = data.drop(columns= Y)
@@ -13,4 +13,7 @@ if __name__ == "__main__":
     print(X)
     print(Y)
 
-    score, clf, correct, incorrect = hamming_scoreCV(X, Y)
+    score, loss = hamming_score(X,Y)
+
+    #score, clf, correct, incorrect = hamming_scoreCV(X, Y)
+    print("score = {} loss {}".format(score, loss))

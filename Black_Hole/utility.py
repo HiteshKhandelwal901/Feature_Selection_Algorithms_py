@@ -1,4 +1,5 @@
 from collections import defaultdict
+import sklearn
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -19,6 +20,8 @@ from sklearn.model_selection import KFold
 from sklearn.multiclass import OneVsRestClassifier
 from scipy.stats import pearsonr
 from skmultilearn.problem_transform import BinaryRelevance
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import hamming_loss
 
 
 if not sys.warnoptions:
@@ -205,6 +208,20 @@ def hamming_get_accuracy(y_pred,y_test):
 
     return correct/size, correct, incorrect
 
+
+def hamming_score(X,y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
+    
+    clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 25))
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test).toarray()
+    loss = hamming_loss(y_pred, y_test)
+    score = 1-loss
+    return score, loss
+
+
+
+
 def hamming_scoreCV(X, y, n_splits = 5, model_name = "Random_forest"):
     #print("INSIDE HAMMING SCORE CV RECIVED X = ", X.shape)
     kf = KFold(n_splits)
@@ -233,7 +250,7 @@ def hamming_scoreCV(X, y, n_splits = 5, model_name = "Random_forest"):
         #clf = OneVsRestClassifier(LogisticRegression(solver='sag'), n_jobs=1)
         if model_name == "Random_forest":
             #print("inside random forest")
-            clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 42))
+            clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 12))
             clf.fit(x_train, y_train)
             y_pred = clf.predict(x_test).toarray()
             score,correct, incorrect = hamming_get_accuracy(y_pred, y_test)
