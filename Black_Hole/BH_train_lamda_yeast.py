@@ -22,7 +22,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 279
+dim = 88
 score_cache = defaultdict()
 
 
@@ -171,8 +171,8 @@ class Star:
             #correlation distance sum for the subset attributes
             corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
-            #fitness = (score / (1 + (10*features_selected))) - (0.5*corr_dist_sum)
-            fitness = score - 0.05*corr_dist_sum
+            fitness = (score / (1 + (0.05*features_selected))) 
+            #fitness = score
             #print("fitness = \n", fitness)
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
             score_cache[index_sum] = (fitness, score,1-score)
@@ -301,45 +301,40 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    df.to_csv('BH_bipirate_binary_BH_test_constant0.05.csv')
+    df.to_csv('BH_test_score_yeast_lam0.05onlycsv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
 
 if __name__ == "__main__":
 
-    #Reading the data into Dataframe
-    data = pd.read_csv("scene.csv")
 
-    #Get X and Y from the data
-    Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
+    data = pd.read_csv("yeast_clean.csv")
+    print("data = \n", data)
+    Y = data[['Class1','Class2','Class3','Class4','Class5','Class6','Class7','Class8','Class9','Class10','Class11','Class12','Class13','Class14']]
     X = data.drop(columns= Y)
-    #X = X.iloc[:, 0:30]
+    print("X = \n\n", X)
+
     print("INFO : \n\n")
     print("X shape : ", X.shape)
     print("X type = ", type(X))
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
     
-    #uncomment to run with chi^2
+    #Run with chi^2
+    scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
+    X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     X = univariate_feature_elimination(X,Y,15)
-    #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
-
-
-
-    #print the information about X and Y
-
-   
  
- 
+
     #Run without BH, just the random forest CV
-    print("\n\n-----without feature selection 0.05 constant----- \n\n")
+    print("\n\n-----without feature selection ----- \n\n")
  
     score, loss = hamming_score(X, Y)
     print("score {} loss {}".format(score, loss))
 
     #Run with BH
-    print("\n\n---with feature selection lambda 0.05 constant------\n\n")
+    print("\n\n---with feature selection 0.05 lamda------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
     X_subset , ham_score, ham_loss = fit(20,50,X,Y)
