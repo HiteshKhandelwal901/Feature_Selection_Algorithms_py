@@ -171,8 +171,8 @@ class Star:
             #correlation distance sum for the subset attributes
             corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
-            fitness = (score / (1 + (0.7*features_selected)))
-            #fitness = score - 0.05*corr_dist_sum
+            #fitness = (score / (1 + (0.05*features_selected)))
+            fitness = score - 0.005*corr_dist_sum
             #fitness = score 
             #print("fitness = \n", fitness)
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
@@ -302,7 +302,7 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    df.to_csv('BH_train_scene_test_loss_lam0.7only.csv')
+    df.to_csv('BH_train_scene_test_loss_const0.005only.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
@@ -340,7 +340,7 @@ if __name__ == "__main__":
     print("score {} loss {}".format(score, loss))
 
     #Run with BH
-    print("\n\n---with feature selection lam = 0.7------\n\n")
+    print("\n\n---with feature selection const = 0.005------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
     X_subset , ham_score, ham_loss = fit(20,50,X,Y)

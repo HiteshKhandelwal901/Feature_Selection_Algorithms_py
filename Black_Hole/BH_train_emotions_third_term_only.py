@@ -22,7 +22,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 279
+dim = 57
 score_cache = defaultdict()
 
 
@@ -171,9 +171,9 @@ class Star:
             #correlation distance sum for the subset attributes
             corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
-            fitness = (score / (1 + (0.7*features_selected)))
-            #fitness = score - 0.05*corr_dist_sum
-            #fitness = score 
+            #fitness = (score / (1 + (0.005*features_selected)))
+            fitness = (score ) - (0.005*corr_dist_sum)
+            #fitness = (score )
             #print("fitness = \n", fitness)
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
             score_cache[index_sum] = (fitness, score,1-score)
@@ -302,28 +302,32 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    df.to_csv('BH_train_scene_test_loss_lam0.7only.csv')
+    df.to_csv('BH_ testscore_emotions_const0.005only.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
 
 if __name__ == "__main__":
 
-    #Reading the data into Dataframe
-    data = pd.read_csv("scene.csv")
+    data = pd.read_csv('emotions_clean.csv')
+    print("data = ", data)
+    X = data.iloc[:, :-6]
+    Y = data.iloc[:, -6:]
+    print("X = \n", X)
+    print("Y = \n", Y)
+    scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
+    X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
+    X = univariate_feature_elimination(X,Y,15)
 
-    #Get X and Y from the data
-    Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
-    X = data.drop(columns= Y)
-    #X = X.iloc[:, 0:30]
-    print("INFO : \n\n")
+
+    #print the information about X and Y
+    print("INFO after CH2: \n\n")
     print("X shape : ", X.shape)
     print("X type = ", type(X))
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
-    
-    #uncomment to run with chi^2
-    X = univariate_feature_elimination(X,Y,15)
+
+
     #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
 
 
@@ -340,7 +344,7 @@ if __name__ == "__main__":
     print("score {} loss {}".format(score, loss))
 
     #Run with BH
-    print("\n\n---with feature selection lam = 0.7------\n\n")
+    print("\n\n---with feature selection cont = 0.005------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
     X_subset , ham_score, ham_loss = fit(20,50,X,Y)
