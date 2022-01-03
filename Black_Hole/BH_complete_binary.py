@@ -312,6 +312,8 @@ def fit(num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         print("converting BH to binary")
+
+        it = it + 1
     
     #print("sample star pos = ", pop[12].pos)
     #print("blackhole pos = ", global_BH.pos)
