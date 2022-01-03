@@ -108,7 +108,7 @@ class Star:
   
     def Obj_fun(self, label_dict, X, Y):
         feature_index = self.select_features()
-        print("star {} feature index = {}".format(self.name, feature_index))
+        #print("star {} feature index = {}".format(self.name, feature_index))
         score, ham_score, ham_loss = self.get_score(label_dict,feature_index, X, Y)
         return score, ham_score, ham_loss
     
@@ -126,21 +126,22 @@ class Star:
         return [random.uniform(0, 1) for i in range(dim)]
 
     def updateLocation_binary(self, BH):
-        print("updating star {} location \n".format(self.name))
-        print("current position {} \n".format(self.pos))
+        #print("updating star {} location \n".format(self.name))
+        #print("current position {} \n".format(self.pos))
         for i in range(len(self.pos)):
-            print("i = \n", i)
-            print("pos {} = {} and BH pos {} \n".format(i, self.pos[i], BH.pos[i]))
+            #print("i = \n", i)
+            #print("pos {} = {} and BH pos {} \n".format(i, self.pos[i], BH.pos[i]))
             if self.pos[i] == BH.pos[i]:
-                print("same")
+                pass
+                #print("same")
             else:
-                print("different")
+                #print("different")
                 rand_num = self.random_generator()
-                print("rand_num = \n", rand_num)
+                #print("rand_num = \n", rand_num)
                 if rand_num < 0.5:
-                    print("print changng the value")
+                    #print("print changng the value")
                     self.pos[i] = copy.copy(BH.pos[i])
-                    print("self pos changed from {} to {} ".format(self.pos[i], BH.pos[i]))
+                    #print("self pos changed from {} to {} ".format(self.pos[i], BH.pos[i]))
     
     def updateLocation(self, BH):
         for i in range(len(self.pos)):
@@ -247,7 +248,7 @@ def fit(num_of_samples,num_iter, X, Y):
     pop = []
     for i in range(0, pop_number):
         pop.append(Star(str(i)))
-        print("start {} initalized pos {}".format(pop[i].name, pop[i].pos))
+        #print("start {} initalized pos {}".format(pop[i].name, pop[i].pos))
 
 
     #intialize parametrs and a global black hole ( best black hole)
@@ -267,7 +268,7 @@ def fit(num_of_samples,num_iter, X, Y):
         for i in range(0, pop_number):
             if pop[i].isBH == False:
                 pop[i].updateFitness(label_dict,X, Y)
-                print("star {} fitness {}= \n".format(pop[i].name, pop[i].fitness))
+                #print("star {} fitness {}= \n".format(pop[i].name, pop[i].fitness))
             else:
                 pass
 
@@ -286,9 +287,9 @@ def fit(num_of_samples,num_iter, X, Y):
         #update the location of other stars
         for i in range(pop_number):
             if pop[i].isBH == False:
-                print("updating {} location".format(pop[i].name))
+                #print("updating {} location".format(pop[i].name))
                 pop[i].updateLocation_binary(global_BH)
-                print("new position = {}".format(pop[i].pos))
+                #print("new position = {}".format(pop[i].pos))
                
             else:
                 pass
@@ -311,10 +312,6 @@ def fit(num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         print("converting BH to binary")
-        if it>=10 and it%10 == 0:
-            global_BH.pos = binary_pos(global_BH.pos)
-            print("after conversion  = \n", global_BH.pos)
-        it = it + 1
     
     #print("sample star pos = ", pop[12].pos)
     #print("blackhole pos = ", global_BH.pos)
@@ -331,7 +328,7 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    df.to_csv('BH_train_scene_test_loss_lam0.7only.csv')
+    #df.to_csv('BH_train_scene_test_loss_lam0.7only.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
@@ -358,7 +355,6 @@ if __name__ == "__main__":
     #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
 
     
-    X = X.iloc[:, 0:4]
     print("INFO : \n\n")
     print("X shape : ", X.shape)
     print("X type = ", type(X))
