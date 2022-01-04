@@ -23,7 +23,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 57
+dim = 53
 score_cache = defaultdict()
 
 
@@ -336,4 +336,33 @@ def fit(num_of_samples,num_iter, X, Y):
 
 
 if __name__ == "__main__":
+    data = pd.read_csv('CAL500.csv')
+    print("data = \n", data)
+    print("data.shape  = \n", data.shape)
+
+    Y = data.iloc[:, -174:]
+
+    X = data.iloc[:, 1:-174]
+    print("X = ", X)
+    print("Y = \n", Y)
+
+    scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
+    X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
+
+    #uncomment to run with chi^2
+    X = univariate_feature_elimination(X,Y,15)
+    #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
+    print("X shape = ", X.shape)
+    print("Y shape = ", Y.shape)
+    #Run without BH, just the random forest CV
+    print("\n\n-----without feature selection ----- \n\n")
+ 
+    score, loss = hamming_score(X, Y)
+    print("score {} loss {}".format(score, loss))
+
+    #Run with BH
+    print("\n\n---with feature selection lam = 0.002------\n\n")
+    
+    #Get the fitness, ham score, ham loss and the worst features
+    X_subset , ham_score, ham_loss = fit(20,50,X,Y)
     
