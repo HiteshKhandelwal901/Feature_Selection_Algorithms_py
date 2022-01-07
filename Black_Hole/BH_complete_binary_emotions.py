@@ -331,8 +331,8 @@ def fit(lam,num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    name = 'BH_complete_binary_scene' + str(lam) + '.csv'
-    df.to_csv(name)
+    name = 'BH_complete_binary_emotions' + str(lam) + '.csv'
+    #df.to_csv(name)
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
@@ -376,13 +376,12 @@ if __name__ == "__main__":
     print("\n\n---with feature selection------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    i = 0.0001
+    lam_list = [0.00001, 0.00005, 0.00007, 0.0001, 0.0005, 0.0007, 0.001, 0.005, 0.007, 0.01, 0.05, 0.07]
     loss_list = defaultdict()
-    while i<0.1:
+    for i in lam_list:
         X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
         print("test loss with BH = {}".format(ham_loss))
-        loss_list[i] = ham_loss
-        i = i + 0.0002
+        loss_list[i] = (ham_loss, X_subset.shape[1])
 
     print("loss list = \n")
     print(loss_list)
