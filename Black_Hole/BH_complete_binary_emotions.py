@@ -376,13 +376,13 @@ if __name__ == "__main__":
     print("\n\n---with feature selection------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    i = 0.5
+    i = 0.0001
     loss_list = defaultdict()
-    while i<10:
+    while i<0.1:
         X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
         print("test loss with BH = {}".format(ham_loss))
         loss_list[i] = ham_loss
-        i = i + 0.5
+        i = i + 0.0002
 
     print("loss list = \n")
     print(loss_list)
