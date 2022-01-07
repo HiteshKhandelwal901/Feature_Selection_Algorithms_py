@@ -200,7 +200,7 @@ class Star:
             #correlation distance sum for the subset attributes
             corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
-            fitness = (score / (1 + (0.002*features_selected)))
+            fitness = (score / (1 + (lam*features_selected)))
             #fitness = score - 0.05*corr_dist_sum
             #fitness = score 
             #print("fitness = \n", fitness)
