@@ -367,8 +367,9 @@ if __name__ == "__main__":
     print("\n\n---with feature selection------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    lam_list = [0.0005, 0.0007, 0.005, 0.007, 0.5, 0.7]
+    lam_list = [0.0005, 0.0007]
     for i in lam_list:
         X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
         print("test loss with BH = {}".format(ham_loss))
+    print(lam_list)
     
