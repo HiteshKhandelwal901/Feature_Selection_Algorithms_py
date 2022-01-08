@@ -381,4 +381,5 @@ if __name__ == "__main__":
         X_subset , ham_score, ham_loss = fit(i,3,10,X,Y)
         print("test loss with BH = {}".format(ham_loss))
         loss_list[i] = (ham_loss, X_subset.shape[1])
+    print(lam_list)
     
