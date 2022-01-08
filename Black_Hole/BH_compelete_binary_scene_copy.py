@@ -23,7 +23,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 88
+dim = 279
 score_cache = defaultdict()
 
 
@@ -106,7 +106,7 @@ class Star:
     def updateFitness(self,lam, label_dict, X, Y):
         self.fitness, self.ham_score, self.ham_loss = self.Obj_fun(lam, label_dict, X,Y) #set this to objective function
   
-    def Obj_fun(self, lam, label_dict, X, Y):
+    def Obj_fun(self,lam, label_dict, X, Y):
         feature_index = self.select_features()
         #print("star {} feature index = {}".format(self.name, feature_index))
         score, ham_score, ham_loss = self.get_score(lam, label_dict,feature_index, X, Y)
@@ -154,7 +154,7 @@ class Star:
         num = random.uniform(0, 1)
         return num
 
-    def get_score(self,lam, label_dict,feature_index, X, Y):
+    def get_score(self,lam,label_dict,feature_index, X, Y):
         """
         Function to get the fitness score 
 
@@ -303,8 +303,9 @@ def fit(lam, num_of_samples,num_iter, X, Y):
             if isCrossingEventHorizon(global_BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
                 for j in range(dim):
                     pop[i].pos[j] = pop[i].random_generator()
-        print("lamda = ", lam)
+
         print("fitness || ", global_BH.fitness, "\n")
+        print("lam = ", lam)
         features = select_worst_features(global_BH.pos)
         print("hamming's loss = ", global_BH.ham_loss)
         print("ham score = ", global_BH.ham_score)
@@ -338,42 +339,36 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
 
 if __name__ == "__main__":
-    data = pd.read_csv("yeast_clean.csv")
-    print("data = \n", data)
-    Y = data[['Class1','Class2','Class3','Class4','Class5','Class6','Class7','Class8','Class9','Class10','Class11','Class12','Class13','Class14']]
-    X = data.drop(columns= Y)
-    print("X = \n\n", X)
+        #Reading the data into Dataframe
+    data = pd.read_csv("scene.csv")
 
+    #Get X and Y from the data
+    Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
+    X = data.drop(columns= Y)
+    #X = X.iloc[:, 0:30]
     print("INFO : \n\n")
     print("X shape : ", X.shape)
     print("X type = ", type(X))
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
     
-    #Run with chi^2
-    scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
-    X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
+    #uncomment to run with chi^2
     X = univariate_feature_elimination(X,Y,15)
- 
+    #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
 
+ 
     #Run without BH, just the random forest CV
-    print("\n\n-----without feature selection lambda = 5----- \n\n")
+    print("\n\n-----without feature selection ----- \n\n")
  
     score, loss = hamming_score(X, Y)
     print("score {} loss {}".format(score, loss))
 
     #Run with BH
-    print("\n\n---with feature selection lambda = 5------\n\n")
+    print("\n\n---with feature selection------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    i = 0.5
-    loss_list = defaultdict()
-    lam_list = [0.00001, 0.00005, 0.00007, 0.0001, 0.0005, 0.0007, 0.001, 0.005, 0.007, 0.01, 0.05, 0.07]
-    for i in lam_list:   
+    lam_list = [0.0005, 0.0007, 0.005, 0.007, 0.5, 0.7]
+    for i in lam_list:
         X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
         print("test loss with BH = {}".format(ham_loss))
-        loss_list[i] = (ham_loss, X_subset.shape[1])
-
-    print("loss list = \n")
-    print(loss_list)
     
