@@ -331,7 +331,7 @@ def fit(lam,num_of_samples,num_iter, X, Y):
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
     name = 'BH_complete_binary_yeast' + str(lam) + '.csv'
-    print("saving {} ".format(name))
+    #print("saving {} ".format(name))
     #df.to_csv('BH_train_scene_test_loss_lam0.7only.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     print("\n\n---with feature selection lam = 0.002------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    lam_list = [0.0005, 0.0007, 0.005, 0.007, 0.05, 0.07]
+    lam_list = [0.00001, 0.00005]
     loss_list = defaultdict()
     for i in lam_list:
         X_subset , ham_score, ham_loss = fit(i,3,10,X,Y)
