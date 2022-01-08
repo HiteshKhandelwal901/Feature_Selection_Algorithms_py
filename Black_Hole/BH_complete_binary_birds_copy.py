@@ -103,13 +103,13 @@ class Star:
             return 0
 
 
-    def updateFitness(self,label_dict, X, Y):
-        self.fitness, self.ham_score, self.ham_loss = self.Obj_fun(label_dict, X,Y) #set this to objective function
+    def updateFitness(self,lam,label_dict, X, Y):
+        self.fitness, self.ham_score, self.ham_loss = self.Obj_fun(lam,label_dict, X,Y) #set this to objective function
   
-    def Obj_fun(self, label_dict, X, Y):
+    def Obj_fun(self, lam,label_dict, X, Y):
         feature_index = self.select_features()
         #print("star {} feature index = {}".format(self.name, feature_index))
-        score, ham_score, ham_loss = self.get_score(label_dict,feature_index, X, Y)
+        score, ham_score, ham_loss = self.get_score(lam,label_dict,feature_index, X, Y)
         return score, ham_score, ham_loss
     
     def select_features(self):
@@ -154,7 +154,7 @@ class Star:
         num = random.uniform(0, 1)
         return num
 
-    def get_score(self, label_dict,feature_index, X, Y):
+    def get_score(self, lam,label_dict,feature_index, X, Y):
         """
         Function to get the fitness score 
 
@@ -200,7 +200,7 @@ class Star:
             #correlation distance sum for the subset attributes
             corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
-            fitness = (score / (1 + (0.002*features_selected)))
+            fitness = (score / (1 + (lam*features_selected)))
             #fitness = score - 0.05*corr_dist_sum
             #fitness = score 
             #print("fitness = \n", fitness)
@@ -225,7 +225,7 @@ def binary_pos(pos):
             binary_list.append(0) 
     return binary_list
 
-def fit(num_of_samples,num_iter, X, Y):
+def fit(lam,num_of_samples,num_iter, X, Y):
     """
     function to run blackhole feature selection algorithm
 
@@ -267,7 +267,7 @@ def fit(num_of_samples,num_iter, X, Y):
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
             if pop[i].isBH == False:
-                pop[i].updateFitness(label_dict,X, Y)
+                pop[i].updateFitness(lam,label_dict,X, Y)
                 #print("star {} fitness {}= \n".format(pop[i].name, pop[i].fitness))
             else:
                 pass
@@ -330,7 +330,9 @@ def fit(num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    #df.to_csv(name)
+    name = 'BH_complete_binary_yeast' + str(lam) + '.csv'
+    print("saving {} ".format(name))
+    #df.to_csv('BH_train_scene_test_loss_lam0.7only.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
@@ -373,6 +375,10 @@ if __name__ == "__main__":
     print("\n\n---with feature selection lam = 0.002------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    X_subset , ham_score, ham_loss = fit(3,10,X,Y)
-    print("test loss with BH = {}".format(ham_loss))
+    lam_list = [0.0005, 0.0007, 0.005, 0.007, 0.05, 0.07]
+    loss_list = defaultdict()
+    for i in lam_list:
+        X_subset , ham_score, ham_loss = fit(i,3,10,X,Y)
+        print("test loss with BH = {}".format(ham_loss))
+        loss_list[i] = (ham_loss, X_subset.shape[1])
     
