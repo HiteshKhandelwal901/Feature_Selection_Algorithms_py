@@ -23,7 +23,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 245
+dim = 53
 score_cache = defaultdict()
 
 
@@ -106,14 +106,13 @@ class Star:
     def updateFitness(self,lam,label_dict, X, Y):
         self.fitness, self.ham_score, self.ham_loss = self.Obj_fun(lam,label_dict, X,Y) #set this to objective function
   
-    def Obj_fun(self, lam,label_dict, X, Y):
+    def Obj_fun(self,lam, label_dict, X, Y):
         feature_index = self.select_features()
         #print("star {} feature index = {}".format(self.name, feature_index))
         score, ham_score, ham_loss = self.get_score(lam,label_dict,feature_index, X, Y)
         return score, ham_score, ham_loss
     
     def select_features(self):
-
         feature_index = []
         for index,dim in enumerate(self.pos):
             if dim<0.5:
@@ -154,7 +153,7 @@ class Star:
         num = random.uniform(0, 1)
         return num
 
-    def get_score(self, lam,label_dict,feature_index, X, Y):
+    def get_score(self, lam, label_dict,feature_index, X, Y):
         """
         Function to get the fitness score 
 
@@ -329,27 +328,22 @@ def fit(lam,num_of_samples,num_iter, X, Y):
     print("hamming's loss = ",global_BH.ham_loss)
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
-    df = pd.concat((X_final, Y), axis = 1)
-    name = 'BH_complete_binary_yeast' + str(lam) + '.csv'
-    #print("saving {} ".format(name))
-    #df.to_csv('BH_train_scene_test_loss_lam0.7only.csv')
+    #df = pd.concat((X_final, Y), axis = 1)
+    #df.to_csv('BH_complete_binary_scene0.002lamonly.csv')
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
 
 if __name__ == "__main__":
-    
-    #Reading the data into Dataframe
-    data = pd.read_csv('birds.csv')
-
+    data = pd.read_csv('CAL500.csv')
     print("data = \n", data)
     print("data.shape  = \n", data.shape)
 
-    Y = data.iloc[:, -19:]
-    X = data.iloc[:, 1:-19]
+    Y = data.iloc[:, -174:]
 
-
-    
+    X = data.iloc[:, 1:-174]
+    print("X = ", X)
+    print("Y = \n", Y)
 
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
@@ -357,14 +351,8 @@ if __name__ == "__main__":
     #uncomment to run with chi^2
     X = univariate_feature_elimination(X,Y,15)
     #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
-
-    
-    print("INFO : \n\n")
-    print("X shape : ", X.shape)
-    print("X type = ", type(X))
-    print("Y shape = : ", Y.shape)
-    print("Y type: ", type(Y))
-    
+    print("X shape = ", X.shape)
+    print("Y shape = ", Y.shape)
     #Run without BH, just the random forest CV
     print("\n\n-----without feature selection ----- \n\n")
  
@@ -372,14 +360,13 @@ if __name__ == "__main__":
     print("score {} loss {}".format(score, loss))
 
     #Run with BH
-    print("\n\n---with feature selection lam = 0.002------\n\n")
+    print("\n\n---with feature selection\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    lam_list = [0.00001, 0.00005]
+    lam_list = [0.00001, 0.00005, 0.0001, 0.0005]
     loss_list = defaultdict()
     for i in lam_list:
         X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
-        print("test loss with BH = {}".format(ham_loss))
-        loss_list[i] = (ham_loss, X_subset.shape[1])
+        loss_list[i] = (ham_score, X_subset.shape[1])
     print(loss_list)
     
