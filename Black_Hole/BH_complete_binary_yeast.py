@@ -312,6 +312,8 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         print("converting BH to binary")
+        if (dim-len(features)) <=100:
+            break
 
         it = it + 1
     
@@ -368,7 +370,7 @@ if __name__ == "__main__":
     #Get the fitness, ham score, ham loss and the worst features
     i = 0.5
     loss_list = defaultdict()
-    lam_list = [0.00001, 0.00005, 0.00007, 0.0001, 0.0005, 0.0007, 0.001, 0.005, 0.007, 0.01, 0.05, 0.07]
+    lam_list = [0.00005]
     for i in lam_list:   
         X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
         print("test loss with BH = {}".format(ham_loss))
