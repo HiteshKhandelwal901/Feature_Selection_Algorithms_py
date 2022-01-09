@@ -23,7 +23,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 279
+dim = 1433
 score_cache = defaultdict()
 
 
@@ -312,7 +312,6 @@ def fit(lam, num_of_samples,num_iter, X, Y):
         print("number of features selected = ", (dim-len(features)))
 
         print("\n\n")
-        print("converting BH to binary")
         if (dim-len(features)) < 100:
             break
         it = it + 1
@@ -332,7 +331,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    name = 'BH_complete_binary_yeast' + str(lam) + '.csv'
+    name = 'BH_complete_binary_medical' + str(lam) + '.csv'
     print("saving {} ".format(name))
     df.to_csv(name)
     return X_final, global_BH.ham_score, global_BH.ham_loss
@@ -340,19 +339,22 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
 
 if __name__ == "__main__":
-        #Reading the data into Dataframe
-    data = pd.read_csv("Data/scene.csv")
+    #Reading the data into Dataframe
+    data = pd.read_csv('Data/medical_clean.csv')
+    print("data = \n", data)
+    print("data.shape  = \n", data.shape)
 
-    #Get X and Y from the data
-    Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
-    X = data.drop(columns= Y)
+    Y = data.iloc[:, -45:]
+
+    X = data.iloc[:, 1:-45]
+
+    #X = X.iloc[:, 0:30]
     print("INFO : \n\n")
     print("X shape : ", X.shape)
     print("X type = ", type(X))
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
     
-
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     #uncomment to run with chi^2
