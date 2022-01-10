@@ -312,10 +312,6 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         print("converting BH to binary")
-        if (dim-len(features)) <=100:
-            break
-
-
         it = it + 1
     
     #print("sample star pos = ", pop[12].pos)
@@ -341,7 +337,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
 
 if __name__ == "__main__":
-    data = pd.read_csv("yeast_clean.csv")
+    data = pd.read_csv("Data/yeast_clean.csv")
     print("data = \n", data)
     Y = data[['Class1','Class2','Class3','Class4','Class5','Class6','Class7','Class8','Class9','Class10','Class11','Class12','Class13','Class14']]
     X = data.drop(columns= Y)

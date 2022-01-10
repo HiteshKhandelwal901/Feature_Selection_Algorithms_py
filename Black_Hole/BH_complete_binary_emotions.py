@@ -338,7 +338,7 @@ def fit(lam,num_of_samples,num_iter, X, Y):
 
 
 if __name__ == "__main__":
-    data = pd.read_csv('emotions_clean.csv')
+    data = pd.read_csv('Data/emotions_clean.csv')
     print("data = ", data)
     X = data.iloc[:, :-6]
     Y = data.iloc[:, -6:]
@@ -376,10 +376,10 @@ if __name__ == "__main__":
     print("\n\n---with feature selection------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    lam_list = [0.00001, 0.00005, 0.00007, 0.0001, 0.0005, 0.0007, 0.001, 0.005, 0.007, 0.01, 0.05, 0.07]
+    lam_list = [0.00005]
     loss_list = defaultdict()
     for i in lam_list:
-        X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
+        X_subset , ham_score, ham_loss = fit(i,20,100,X,Y)
         print("test loss with BH = {}".format(ham_loss))
         loss_list[i] = (ham_loss, X_subset.shape[1])
 
