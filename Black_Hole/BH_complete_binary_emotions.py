@@ -379,7 +379,7 @@ if __name__ == "__main__":
     lam_list = [0.00005]
     loss_list = defaultdict()
     for i in lam_list:
-        X_subset , ham_score, ham_loss = fit(i,20,100,X,Y)
+        X_subset , ham_score, ham_loss = fit(i,20,300,X,Y)
         print("test loss with BH = {}".format(ham_loss))
         loss_list[i] = (ham_loss, X_subset.shape[1])
 
