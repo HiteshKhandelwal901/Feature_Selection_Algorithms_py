@@ -313,8 +313,6 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         print("converting BH to binary")
-        if (dim-len(features)) < 100:
-            break
         it = it + 1
     
     #print("sample star pos = ", pop[12].pos)
