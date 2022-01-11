@@ -340,7 +340,7 @@ def fit(lam,num_of_samples,num_iter, X, Y):
 if __name__ == "__main__":
     
     #Reading the data into Dataframe
-    data = pd.read_csv('birds.csv')
+    data = pd.read_csv('Data/birds.csv')
 
     print("data = \n", data)
     print("data.shape  = \n", data.shape)
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     print("\n\n---with feature selection lam = 0.002------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    lam_list = [0.00001, 0.00005]
+    lam_list = [0.00005]
     loss_list = defaultdict()
     for i in lam_list:
         X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
