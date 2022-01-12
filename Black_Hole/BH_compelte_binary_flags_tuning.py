@@ -330,7 +330,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
     df = pd.concat((X_final, Y), axis = 1)
-    name = 'BH_complete_binary_flags' + str(lam) + '.csv'
+    name = 'BH_complete_binary_flags' + str(lam) + '500iter.csv'
     print("saving {} ".format(name))
     df.to_csv(name)
     return X_final, global_BH.ham_score, global_BH.ham_loss
@@ -367,9 +367,9 @@ if __name__ == "__main__":
     print("\n\n---with feature selection------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    lam_list = [0.0005]
+    lam_list = [0.05]
     for i in lam_list:
-        X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
+        X_subset , ham_score, ham_loss = fit(i,20,500,X,Y)
         print("test loss with BH = {}".format(ham_loss))
     print(lam_list)
     
