@@ -8,7 +8,7 @@ from sklearn.metrics import hamming_loss
 import warnings
 warnings.filterwarnings("ignore")
 
-
+"""
 X_train, y_train, feature_names, label_names = load_dataset('emotions', 'train')
 X_test, y_test, _, _ = load_dataset('emotions', 'test')
 
@@ -32,3 +32,11 @@ print(accuracy)  # 0.148
 loss = hamming_loss(y_pred, y_test)
 
 print("loss = ", loss)
+"""
+
+
+import numpy as np
+from sklearn.metrics import coverage_error
+y_true = np.array([[1, 0, 0], [0, 0, 1]])
+y_score = np.array([[0, 0, 1], [1, 0, 0]])
+print(coverage_error(y_true, y_score))

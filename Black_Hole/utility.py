@@ -232,7 +232,9 @@ def hamming_score(X,y, metric = False):
     if metric == True:
         rl_loss = ranking_loss(y_test,y_pred)
         avg_precision = avg_precision_loss(y_test, y_pred)
-        #covg_error = coverage_error(y_pred, y_test)
+        print("y_pred = ", y_pred)
+        print("y_test = ",y_test)
+        #covg_error = coverage_error(y_pred, np.array(y_test))
         return loss, rl_loss, avg_precision
     return score, loss
 
