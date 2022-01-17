@@ -336,6 +336,8 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 
+def Average(lst):
+    return sum(lst) / len(lst)
 
 if __name__ == "__main__":
 
@@ -367,9 +369,21 @@ if __name__ == "__main__":
     print("\n\n---with feature selection------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    lam_list = [0.05]
-    for i in lam_list:
-        X_subset , ham_score, ham_loss = fit(i,20,500,X,Y)
-        print("test loss with BH = {}".format(ham_loss))
-    print(lam_list)
+    i = 0.0005
+    loss_list = []
+    feature_list = []
+    rl_loss_list = []
+    avg_precision_list = []
+    for runs in range(5):
+        print("---RUN {}---".format(runs))
+        X_subset , ham_score, ham_loss = fit(i,20,100,X,Y)
+        loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
+        loss_list.append(loss)
+        rl_loss_list.append(rl_loss)
+        avg_precision_list.append(avg_precision)
+        feature_list.append(X_subset.shape[1])
+        print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
+    print("avg ham loss = ", Average(loss_list))
+    print("avg rl loss = ", Average(rl_loss_list))
+    print("avg of avg precision = ", Average(avg_precision))
     

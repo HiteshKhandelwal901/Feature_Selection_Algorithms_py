@@ -334,7 +334,8 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     df.to_csv(name)
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
-
+def Average(lst):
+    return sum(lst) / len(lst)
 
 if __name__ == "__main__":
     data = pd.read_csv("Data/yeast_clean.csv")
@@ -365,14 +366,21 @@ if __name__ == "__main__":
     #print("\n\n---with feature selection lambda = 5------\n\n")
     
     #Get the fitness, ham score, ham loss and the worst features
-    i = 0.5
-    loss_list = defaultdict()
-    lam_list = [0.00005]
-    for i in lam_list:   
-        X_subset , ham_score, ham_loss = fit(i,20,1000,X,Y)
-        print("test loss with BH = {}".format(ham_loss))
-        loss_list[i] = (ham_loss, X_subset.shape[1])
-
-    print("loss list = \n")
-    print(loss_list)
+    i = 0.0005
+    loss_list = []
+    feature_list = []
+    rl_loss_list = []
+    avg_precision_list = []
+    for runs in range(5):
+        print("---RUN {}---".format(runs))
+        X_subset , ham_score, ham_loss = fit(i,20,100,X,Y)
+        loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
+        loss_list.append(loss)
+        rl_loss_list.append(rl_loss)
+        avg_precision_list.append(avg_precision)
+        feature_list.append(X_subset.shape[1])
+        print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
+    print("avg ham loss = ", Average(loss_list))
+    print("avg rl loss = ", Average(rl_loss_list))
+    print("avg of avg precision = ", Average(avg_precision))
     
