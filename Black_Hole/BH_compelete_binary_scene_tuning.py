@@ -315,7 +315,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
         #print("ham score = ", global_BH.ham_score)
         #print("number of features selected = ", (dim-len(features)))
 
-        print("\n\n")
+        #print("\n\n")
         #print("converting BH to binary")
         if (dim-len(features)) < 100:
             break
@@ -385,16 +385,16 @@ if __name__ == "__main__":
     feature_list = []
     rl_loss_list = []
     avg_precision_list = []
-    for runs in range(3):
+    for runs in range(100):
         print("---RUN {}---".format(runs))
-        X_subset , ham_score, ham_loss = fit(i,3,3,X,Y)
+        X_subset , ham_score, ham_loss = fit(i,20,500,X,Y)
         loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
         loss_list.append(loss)
         rl_loss_list.append(rl_loss)
         avg_precision_list.append(avg_precision)
         feature_list.append(X_subset.shape[1])
         print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
-        print("rl loss || prrcision ".format(rl_loss, avg_precision))
+        print("rl loss || prrcision {} {} ".format(rl_loss, avg_precision))
     print("losst list \n\n {}".format(loss_list))
     print("rl loss list \n\n{}".format(rl_loss_list))
     print("precion list \n\n {}".format(avg_precision_list))
