@@ -23,11 +23,21 @@ from skmultilearn.problem_transform import BinaryRelevance
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import hamming_loss
 from skmultilearn.adapt import MLkNN
-
+from sklearn.metrics import label_ranking_loss, label_ranking_average_precision_score, coverage_error
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
+
+
+def ranking_loss(y_pred, y_true):
+    return label_ranking_loss(y_true, y_pred)
+
+def avg_precision_loss(y_pred, y_true):
+    return label_ranking_average_precision_score(y_true, y_pred)
+
+def coverage_error(y_pred, y_true):
+    return coverage_error(y_true, y_pred)
 
 
 def get_index_sum(X, cols):
@@ -210,7 +220,7 @@ def hamming_get_accuracy(y_pred,y_test):
     return correct/size, correct, incorrect
 
 
-def hamming_score(X,y):
+def hamming_score(X,y, metric = False):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
     
     #clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 25))
@@ -219,6 +229,11 @@ def hamming_score(X,y):
     y_pred = clf.predict(X_test).toarray()
     loss = hamming_loss(y_pred, y_test)
     score = 1-loss
+    if metric == True:
+        rl_loss = ranking_loss(y_test,y_pred)
+        avg_precision = avg_precision_loss(y_pred, y_test)
+        #covg_error = coverage_error(y_pred, y_test)
+        return loss, rl_loss, avg_precision
     return score, loss
 
 
