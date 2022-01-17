@@ -202,7 +202,7 @@ class Star:
             #Num of features selected
             features_selected = (size - len(feature_index))
             #correlation distance sum for the subset attributes
-            corr_dist_sum = get_distance_corr(X,label_dict)
+            #corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
             fitness = (score / (1 + (lam*features_selected)))
             #fitness = score - 0.05*corr_dist_sum
