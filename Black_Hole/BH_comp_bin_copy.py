@@ -231,6 +231,8 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     Worst features :  Blackhole's feature index whose value is lesser than threshold (0.5). Just remove these features
     """
     # Initializing number of stars 
+    ham_loss_list = []
+    feature_list = []
     pop_number = num_of_samples
     #list to append the stars
     pop = []
@@ -297,8 +299,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
         print("\n\n")
         #print("converting BH to binary")
-        ham_loss_list = []
-        feature_list = []
+
         #loss improvement
         ham_loss_list.append(global_BH.ham_loss)
         feature_list.append(dim-len(features))

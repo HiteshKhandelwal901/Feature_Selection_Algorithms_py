@@ -219,6 +219,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
     Args:
 
+    lam : parameter
     num_of_samples : population size
     num_iter :  max_iterations
     X :  Dataframe of attributes. Headers is required
@@ -228,7 +229,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
     Ham score : Hamming's score
     Ham loss :  Hamming's loss
-    Worst features :  Blackhole's feature index whose value is lesser than threshold (0.5). Just remove these features
+    Best subset
     """
     # Initializing number of stars 
     pop_number = num_of_samples
@@ -308,11 +309,11 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     
     
 
-    print("---END OF ALGORITHM-----\\n\n")
-    print("best subset size = ", X_final.shape)
-    print("hamming's loss = ",global_BH.ham_loss)
-    print("hamming's score = ", global_BH.ham_score)
-    print("Done saving the best subset as csv file \n\n")
+    #print("---END OF ALGORITHM-----\\n\n")
+    #print("best subset size = ", X_final.shape)
+    #print("hamming's loss = ",global_BH.ham_loss)
+    #print("hamming's score = ", global_BH.ham_score)
+    #print("Done saving the best subset as csv file \n\n")
     #df = pd.concat((X_final, Y), axis = 1)
     #name = 'BH_complete_binary_yeast' + str(lam) + '.csv'
     #print("saving {} ".format(name))
@@ -344,32 +345,23 @@ if __name__ == "__main__":
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     #uncomment to run with chi^2
     X = univariate_feature_elimination(X,Y,15)
-    #X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
 
  
-    #Run without BH, just the random forest CV
-    print("\n\n-----without feature selection ----- \n\n")
- 
-    score, loss = hamming_score(X, Y)
-    print("score {} loss {}".format(score, loss))
-
-    #Run with BH
     print("\n\n---with feature selection------\n\n")
     
-    #Get the fitness, ham score, ham loss and the worst features
-    #lam_list = [0.0005]
+    #parameters and variables intializations
     lam = 0.0005
     loss_list = []
     feature_list = []
     rl_loss_list = []
     avg_precision_list = []
 
-    #number of runs of program
-    for runs in range(1):
+    #number of runs of program, right now only 1 run.
+    for runs in range(20):
         start_time = time.time()
         print("---RUN {}---".format(runs))
         #run the algorithm
-        X_subset , ham_score, ham_loss = fit(lam,20,500,X,Y)
+        X_subset , ham_score, ham_loss = fit(lam,20,50,X,Y)
         #caculate rl_loss, avg_prec for the best subset
         loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
         #append all metrics to list to calculate avg 
@@ -380,18 +372,18 @@ if __name__ == "__main__":
         print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
         print("rl loss || prrcision {} {} ".format(rl_loss, avg_precision))
     print("--- %s seconds ---" % (time.time() - start_time))
-    #print("losst list \n\n {}".format(loss_list))
-    #print("rl loss list \n\n{}".format(rl_loss_list))
-    #print("precion list \n\n {}".format(avg_precision_list))
-    #print("features list \n\n{}".format(feature_list))
-    #print("avg ham loss = ", Average(loss_list))
-    #print("avg rl loss = ", Average(rl_loss_list))
-    #print("avg of avg precision = ", Average(avg_precision_list))
-    #print("AVG features selected = ", Average(feature_list))
-    #print("variance of ham loss {}".format(variance(loss_list)))
-    #print("variance of rl loss {}".format(variance(rl_loss_list)))
-    #print("variance of presicion loss {}".format(variance(avg_precision_list)))
-    #print("variance of features size {}".format(variance(feature_list)))
+    print("losst list \n\n {}".format(loss_list))
+    print("rl loss list \n\n{}".format(rl_loss_list))
+    print("precion list \n\n {}".format(avg_precision_list))
+    print("features list \n\n{}".format(feature_list))
+    print("avg ham loss = ", Average(loss_list))
+    print("avg rl loss = ", Average(rl_loss_list))
+    print("avg of avg precision = ", Average(avg_precision_list))
+    print("AVG features selected = ", Average(feature_list))
+    print("variance of ham loss {}".format(variance(loss_list)))
+    print("variance of rl loss {}".format(variance(rl_loss_list)))
+    print("variance of presicion loss {}".format(variance(avg_precision_list)))
+    print("variance of features size {}".format(variance(feature_list)))
     
     
 

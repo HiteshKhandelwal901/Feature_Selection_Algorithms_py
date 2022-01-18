@@ -262,7 +262,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
     #start the loop
     while it < max_iter:
-        print("iloop iter || ", it)
+        #print("iloop iter || ", it)
 
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
@@ -303,15 +303,15 @@ def fit(lam, num_of_samples,num_iter, X, Y):
             if isCrossingEventHorizon(global_BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
                 for j in range(dim):
                     pop[i].pos[j] = pop[i].random_generator()
-        print("lamda = ", lam)
-        print("fitness || ", global_BH.fitness, "\n")
+        #print("lamda = ", lam)
+        #print("fitness || ", global_BH.fitness, "\n")
         features = select_worst_features(global_BH.pos)
-        print("hamming's loss = ", global_BH.ham_loss)
-        print("ham score = ", global_BH.ham_score)
-        print("number of features selected = ", (dim-len(features)))
+        #print("hamming's loss = ", global_BH.ham_loss)
+        #print("ham score = ", global_BH.ham_score)
+        #print("number of features selected = ", (dim-len(features)))
 
-        print("\n\n")
-        print("converting BH to binary")
+        #print("\n\n")
+        #print("converting BH to binary")
         it = it + 1
     
     #print("sample star pos = ", pop[12].pos)
@@ -323,19 +323,24 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     
     
 
-    print("---END OF ALGORITHM-----\\n\n")
-    print("best subset size = ", X_final.shape)
-    print("hamming's loss = ",global_BH.ham_loss)
-    print("hamming's score = ", global_BH.ham_score)
-    print("Done saving the best subset as csv file \n\n")
-    df = pd.concat((X_final, Y), axis = 1)
-    name = 'BH_continous_yeast' + str(lam) + '1000iter.csv'
-    print("saving {} ".format(name))
-    df.to_csv(name)
+    #print("---END OF ALGORITHM-----\\n\n")
+    #print("best subset size = ", X_final.shape)
+    #print("hamming's loss = ",global_BH.ham_loss)
+    #print("hamming's score = ", global_BH.ham_score)
+    #print("Done saving the best subset as csv file \n\n")
+    #df = pd.concat((X_final, Y), axis = 1)
+    #name = 'BH_continous_yeast' + str(lam) + '1000iter.csv'
+    #print("saving {} ".format(name))
+    #df.to_csv(name)
     return X_final, global_BH.ham_score, global_BH.ham_loss
 
 def Average(lst):
     return sum(lst) / len(lst)
+
+import statistics
+
+def variance(lst):
+    return statistics.variance(lst)
 
 if __name__ == "__main__":
     data = pd.read_csv("Data/yeast_clean.csv")
@@ -371,9 +376,9 @@ if __name__ == "__main__":
     feature_list = []
     rl_loss_list = []
     avg_precision_list = []
-    for runs in range(5):
+    for runs in range(20):
         print("---RUN {}---".format(runs))
-        X_subset , ham_score, ham_loss = fit(i,20,100,X,Y)
+        X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
         loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
         loss_list.append(loss)
         rl_loss_list.append(rl_loss)
@@ -382,5 +387,10 @@ if __name__ == "__main__":
         print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
     print("avg ham loss = ", Average(loss_list))
     print("avg rl loss = ", Average(rl_loss_list))
-    print("avg of avg precision = ", Average(avg_precision))
+    print("avg of avg precision = ", Average(avg_precision_list))
+    print("AVG features selected = ", Average(feature_list))
+    print("variance of ham loss {}".format(variance(loss_list)))
+    print("variance of rl loss {}".format(variance(rl_loss_list)))
+    print("variance of presicion loss {}".format(variance(avg_precision_list)))
+    print("variance of features size {}".format(variance(feature_list)))
     
