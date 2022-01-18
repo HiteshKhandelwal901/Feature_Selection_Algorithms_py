@@ -20,6 +20,7 @@ from sklearn.metrics import hamming_loss
 import copy
 from sklearn.metrics import label_ranking_loss
 import statistics 
+import time
 
 
 
@@ -317,8 +318,6 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
         #print("\n\n")
         #print("converting BH to binary")
-        if (dim-len(features)) < 100:
-            break
         it = it + 1
     
     #print("sample star pos = ", pop[12].pos)
@@ -385,7 +384,8 @@ if __name__ == "__main__":
     feature_list = []
     rl_loss_list = []
     avg_precision_list = []
-    for runs in range(100):
+    for runs in range(1):
+        start_time = time.time()
         print("---RUN {}---".format(runs))
         X_subset , ham_score, ham_loss = fit(i,20,500,X,Y)
         loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
@@ -395,18 +395,20 @@ if __name__ == "__main__":
         feature_list.append(X_subset.shape[1])
         print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
         print("rl loss || prrcision {} {} ".format(rl_loss, avg_precision))
-    print("losst list \n\n {}".format(loss_list))
-    print("rl loss list \n\n{}".format(rl_loss_list))
-    print("precion list \n\n {}".format(avg_precision_list))
-    print("features list \n\n{}".format(feature_list))
-    print("avg ham loss = ", Average(loss_list))
-    print("avg rl loss = ", Average(rl_loss_list))
-    print("avg of avg precision = ", Average(avg_precision_list))
-    print("AVG features selected = ", Average(feature_list))
-    print("variance of ham loss {}".format(variance(loss_list)))
-    print("variance of rl loss {}".format(variance(rl_loss_list)))
-    print("variance of presicion loss {}".format(variance(avg_precision_list)))
-    print("variance of features size {}".format(variance(feature_list)))
+    print("--- %s seconds ---" % (time.time() - start_time))
+    #print("losst list \n\n {}".format(loss_list))
+    #print("rl loss list \n\n{}".format(rl_loss_list))
+    #print("precion list \n\n {}".format(avg_precision_list))
+    #print("features list \n\n{}".format(feature_list))
+    #print("avg ham loss = ", Average(loss_list))
+    #print("avg rl loss = ", Average(rl_loss_list))
+    #print("avg of avg precision = ", Average(avg_precision_list))
+    #print("AVG features selected = ", Average(feature_list))
+    #print("variance of ham loss {}".format(variance(loss_list)))
+    #print("variance of rl loss {}".format(variance(rl_loss_list)))
+    #print("variance of presicion loss {}".format(variance(avg_precision_list)))
+    #print("variance of features size {}".format(variance(feature_list)))
+    
     
 
     
