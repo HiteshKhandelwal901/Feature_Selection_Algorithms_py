@@ -297,6 +297,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
         #print("\n\n")
         #print("converting BH to binary")
+        
         it = it + 1
     
     #print("sample star pos = ", pop[12].pos)
@@ -369,7 +370,7 @@ if __name__ == "__main__":
         start_time = time.time()
         print("---RUN {}---".format(runs))
         #run the algorithm
-        X_subset , ham_score, ham_loss = fit(lam,20,500,X,Y)
+        X_subset , ham_score, ham_loss = fit(lam,20,150,X,Y)
         #caculate rl_loss, avg_prec for the best subset
         loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
         #append all metrics to list to calculate avg 
