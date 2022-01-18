@@ -34,9 +34,20 @@ loss = hamming_loss(y_pred, y_test)
 print("loss = ", loss)
 """
 
+loss_list = []
+features_list = []
+loss_diff_list = []
+feature_diff_list = []
 
-import numpy as np
-from sklearn.metrics import coverage_error
-y_true = np.array([[1, 0, 0], [0, 0, 1]])
-y_score = np.array([[0, 0, 1], [1, 0, 0]])
-print(coverage_error(y_true, y_score))
+for i in range(loss_list):
+    diff = abs(loss_list[i] - loss_list[i+1])
+    loss_diff_list.append(diff)
+
+print(loss_diff_list)
+
+for i in range(features_list):
+    diff = abs(features_list[i+1] - features_list[i])
+    print("\n", diff)
+    feature_diff_list.append(diff)
+
+print(feature_diff_list)

@@ -250,7 +250,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
     #start the loop
     while it < max_iter:
-        #print("iloop iter || ", it)
+        print("iloop iter || ", it)
 
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
@@ -288,16 +288,20 @@ def fit(lam, num_of_samples,num_iter, X, Y):
                 for j in range(dim):
                     pop[i].pos[j] = pop[i].random_generator()
 
-        #print("fitness || ", global_BH.fitness, "\n")
+        print("fitness || ", global_BH.fitness, "\n")
         #print("lam = ", lam)
         features = select_worst_features(global_BH.pos)
-        #print("hamming's loss = ", global_BH.ham_loss)
+        print("hamming's loss = ", global_BH.ham_loss)
         #print("ham score = ", global_BH.ham_score)
-        #print("number of features selected = ", (dim-len(features)))
+        print("number of features selected = ", (dim-len(features)))
 
-        #print("\n\n")
+        print("\n\n")
         #print("converting BH to binary")
-        
+        ham_loss_list = []
+        feature_list = []
+        #loss improvement
+        ham_loss_list.append(global_BH.ham_loss)
+        feature_list.append(dim-len(features))
         it = it + 1
     
     #print("sample star pos = ", pop[12].pos)
@@ -314,6 +318,8 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     print("hamming's loss = ",global_BH.ham_loss)
     print("hamming's score = ", global_BH.ham_score)
     print("Done saving the best subset as csv file \n\n")
+    print("loss list = ", ham_loss_list)
+    print("features list = ", feature_list)
     #df = pd.concat((X_final, Y), axis = 1)
     #name = 'BH_complete_binary_yeast' + str(lam) + '.csv'
     #print("saving {} ".format(name))
