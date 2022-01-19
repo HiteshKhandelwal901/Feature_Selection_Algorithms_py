@@ -359,7 +359,6 @@ if __name__ == "__main__":
     #number of runs of program, right now only 1 run.
     start_time = time.time()
     for runs in range(20):
-        start_time = time.time()
         print("---RUN {}---".format(runs))
         #run the algorithm
         X_subset , ham_score, ham_loss = fit(lam,20,50,X,Y)

@@ -17,6 +17,7 @@ from Bipirate_Algorithm import distance_correlation_dict_gen, euclid_dist, get_d
 import numpy as np
 from sklearn.metrics import hamming_loss
 import copy
+import time
 
 
 if not sys.warnoptions:
@@ -103,13 +104,13 @@ class Star:
             return 0
 
 
-    def updateFitness(self,lam, label_dict, X, Y):
-        self.fitness, self.ham_score, self.ham_loss = self.Obj_fun(lam, label_dict, X,Y) #set this to objective function
+    def updateFitness(self,lam, seed,label_dict, X, Y):
+        self.fitness, self.ham_score, self.ham_loss = self.Obj_fun(lam,seed, label_dict, X,Y) #set this to objective function
   
-    def Obj_fun(self, lam, label_dict, X, Y):
+    def Obj_fun(self, lam, seed, label_dict, X, Y):
         feature_index = self.select_features()
         #print("star {} feature index = {}".format(self.name, feature_index))
-        score, ham_score, ham_loss = self.get_score(lam, label_dict,feature_index, X, Y)
+        score, ham_score, ham_loss = self.get_score(lam, seed, label_dict,feature_index, X, Y)
         return score, ham_score, ham_loss
     
     def select_features(self):
@@ -154,7 +155,7 @@ class Star:
         num = random.uniform(0, 1)
         return num
 
-    def get_score(self,lam, label_dict,feature_index, X, Y):
+    def get_score(self,lam, seed, label_dict,feature_index, X, Y):
         """
         Function to get the fitness score 
 
@@ -193,7 +194,7 @@ class Star:
         
             #if the subset is not seen before, get the score by running hamming CV
             #score,clf,correct, incorrect = hamming_scoreCV(X, Y)
-            score, loss = hamming_score(X,Y)
+            score, loss = hamming_score(seed,X,Y)
 
             #Num of features selected
             features_selected = (size - len(feature_index))
@@ -225,7 +226,7 @@ def binary_pos(pos):
             binary_list.append(0) 
     return binary_list
 
-def fit(lam, num_of_samples,num_iter, X, Y):
+def fit(lam,seed,num_of_samples,num_iter, X, Y):
     """
     function to run blackhole feature selection algorithm
 
@@ -267,7 +268,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
             if pop[i].isBH == False:
-                pop[i].updateFitness(lam, label_dict,X, Y)
+                pop[i].updateFitness(lam, seed, label_dict,X, Y)
                 #print("star {} fitness {}= \n".format(pop[i].name, pop[i].fitness))
             else:
                 pass
@@ -364,7 +365,7 @@ if __name__ == "__main__":
     #Run without BH, just the random forest CV
     print("\n\n-----without feature selection lambda = 5----- \n\n")
  
-    score, loss = hamming_score(X, Y)
+    score, loss = hamming_score(42,X, Y)
     print("score {} loss {}".format(score, loss))
 
     #Run with BH
@@ -376,17 +377,22 @@ if __name__ == "__main__":
     feature_list = []
     rl_loss_list = []
     avg_precision_list = []
-    for runs in range(10):
+    seed_list = [10,20,30,40,50,60,70,80,90,100,25,35,45,55,65,75,85,95,99,39,22,41]
+    start_time = time.time()
+    for runs in range(20):
         print("---RUN {}---".format(runs))
-        X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
+        seed = seed_list[runs]
+        print("seed = ", seed)
+        X_subset , ham_score, ham_loss = fit(i,seed,20,50,X,Y)
         #print(X_subset)
-        loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
+        loss, rl_loss, avg_precision = hamming_score(seed,X_subset,Y, metric = True)
         print("ham loss = ", ham_loss, "loss = ", loss)
         loss_list.append(ham_loss)
         rl_loss_list.append(rl_loss)
         avg_precision_list.append(avg_precision)
         feature_list.append(X_subset.shape[1])
         print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
+    print("--- %s seconds ---" % (time.time() - start_time))
     print("avg ham loss = ", Average(loss_list))
     print("avg rl loss = ", Average(rl_loss_list))
     print("avg of avg precision = ", Average(avg_precision_list))
@@ -395,4 +401,7 @@ if __name__ == "__main__":
     print("variance of rl loss {}".format(variance(rl_loss_list)))
     print("variance of presicion loss {}".format(variance(avg_precision_list)))
     print("variance of features size {}".format(variance(feature_list)))
+    print("rl loss list", rl_loss_list)
+    print("precision list", avg_precision_list)
+
     

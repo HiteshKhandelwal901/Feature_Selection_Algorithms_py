@@ -220,8 +220,8 @@ def hamming_get_accuracy(y_pred,y_test):
     return correct/size, correct, incorrect
 
 
-def hamming_score(X,y, metric = False):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
+def hamming_score(seed,X,y, metric = False):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=seed)
     
     #clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 25))
     clf = MLkNN(k=10)
