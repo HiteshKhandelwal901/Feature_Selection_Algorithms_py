@@ -357,6 +357,7 @@ if __name__ == "__main__":
     avg_precision_list = []
 
     #number of runs of program, right now only 1 run.
+    start_time = time.time()
     for runs in range(20):
         start_time = time.time()
         print("---RUN {}---".format(runs))
@@ -365,7 +366,7 @@ if __name__ == "__main__":
         #caculate rl_loss, avg_prec for the best subset
         loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
         #append all metrics to list to calculate avg 
-        loss_list.append(loss)
+        loss_list.append(ham_loss)
         rl_loss_list.append(rl_loss)
         avg_precision_list.append(avg_precision)
         feature_list.append(X_subset.shape[1])
