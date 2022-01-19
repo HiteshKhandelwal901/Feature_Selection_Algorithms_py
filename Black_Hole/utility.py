@@ -224,16 +224,17 @@ def hamming_score(X,y, metric = False):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
     
     #clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 25))
-    clf = BinaryRelevance(classifier = MLkNN(k=10))
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test).toarray()
+    clf = MLkNN(k=10)
+    #print(type(X_train))
+    clf.fit(np.array(X_train), np.array(y_train))
+    y_pred = clf.predict(np.array(X_test)).toarray()
     loss = hamming_loss(y_pred, y_test)
     score = 1-loss
     if metric == True:
         rl_loss = ranking_loss(y_test,y_pred)
         avg_precision = avg_precision_loss(y_test, y_pred)
-        print("y_pred = ", y_pred)
-        print("y_test = ",y_test)
+        #print("y_pred = ", y_pred)
+        #print("y_test = ",y_test)
         #covg_error = coverage_error(y_pred, np.array(y_test))
         return loss, rl_loss, avg_precision
     return score, loss

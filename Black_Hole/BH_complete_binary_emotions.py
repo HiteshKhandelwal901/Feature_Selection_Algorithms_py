@@ -262,7 +262,7 @@ def fit(lam,num_of_samples,num_iter, X, Y):
 
     #start the loop
     while it < max_iter:
-        #print("iloop iter || ", it)
+        print("iloop iter || ", it)
 
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
@@ -387,14 +387,15 @@ if __name__ == "__main__":
     feature_list = []
     rl_loss_list = []
     avg_precision_list = []
-    for runs in range(20):
+    for runs in range(1):
         print("---RUN {}---".format(runs))
         X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
         loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
-        loss_list.append(loss)
+        loss_list.append(ham_loss)
         rl_loss_list.append(rl_loss)
         avg_precision_list.append(avg_precision)
         feature_list.append(X_subset.shape[1])
+        print("ham loss = ", ham_loss, "loss = ", loss)
         print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
     print("avg ham loss = ", Average(loss_list))
     print("avg rl loss = ", Average(rl_loss_list))

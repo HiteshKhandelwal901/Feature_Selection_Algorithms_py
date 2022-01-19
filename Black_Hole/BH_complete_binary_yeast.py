@@ -376,11 +376,13 @@ if __name__ == "__main__":
     feature_list = []
     rl_loss_list = []
     avg_precision_list = []
-    for runs in range(20):
+    for runs in range(10):
         print("---RUN {}---".format(runs))
         X_subset , ham_score, ham_loss = fit(i,20,50,X,Y)
+        #print(X_subset)
         loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
-        loss_list.append(loss)
+        print("ham loss = ", ham_loss, "loss = ", loss)
+        loss_list.append(ham_loss)
         rl_loss_list.append(rl_loss)
         avg_precision_list.append(avg_precision)
         feature_list.append(X_subset.shape[1])
