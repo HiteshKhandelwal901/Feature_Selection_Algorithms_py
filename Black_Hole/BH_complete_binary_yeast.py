@@ -4,6 +4,7 @@ import pandas as pd
 import random
 import math
 import sys
+from scipy.stats.morestats import Variance
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
@@ -17,7 +18,11 @@ from Bipirate_Algorithm import distance_correlation_dict_gen, euclid_dist, get_d
 import numpy as np
 from sklearn.metrics import hamming_loss
 import copy
+from sklearn.metrics import label_ranking_loss
+import statistics 
 import time
+from sklearn.metrics import label_ranking_loss, label_ranking_average_precision_score, coverage_error
+from skmultilearn.adapt import MLkNN
 
 
 if not sys.warnoptions:
@@ -95,6 +100,7 @@ class Star:
         self.ham_loss = 1
         self.ham_score = 0
         self.name = name
+        self.clf = None
     
     def random_generator_binary(self):
         num = random.uniform(0, 1)
@@ -104,14 +110,13 @@ class Star:
             return 0
 
 
-    def updateFitness(self,lam, seed,label_dict, X, Y):
-        self.fitness, self.ham_score, self.ham_loss = self.Obj_fun(lam,seed, label_dict, X,Y) #set this to objective function
+    def updateFitness(self,lam, label_dict, X, Y):
+        self.fitness, self.ham_score, self.ham_loss, self.clf = self.Obj_fun(lam, label_dict, X,Y) #set this to objective function
   
-    def Obj_fun(self, lam, seed, label_dict, X, Y):
+    def Obj_fun(self,lam, label_dict, X, Y):
         feature_index = self.select_features()
-        #print("star {} feature index = {}".format(self.name, feature_index))
-        score, ham_score, ham_loss = self.get_score(lam, seed, label_dict,feature_index, X, Y)
-        return score, ham_score, ham_loss
+        score, ham_score, ham_loss, clf = self.get_score(lam, label_dict,feature_index, X, Y)
+        return score, ham_score, ham_loss, clf
     
     def select_features(self):
 
@@ -127,35 +132,24 @@ class Star:
         return [random.uniform(0, 1) for i in range(dim)]
 
     def updateLocation_binary(self, BH):
-        #print("updating star {} location \n".format(self.name))
-        #print("current position {} \n".format(self.pos))
         for i in range(len(self.pos)):
-            #print("i = \n", i)
-            #print("pos {} = {} and BH pos {} \n".format(i, self.pos[i], BH.pos[i]))
             if self.pos[i] == BH.pos[i]:
                 pass
-                #print("same")
             else:
-                #print("different")
                 rand_num = self.random_generator()
-                #print("rand_num = \n", rand_num)
                 if rand_num < 0.5:
-                    #print("print changng the value")
                     self.pos[i] = copy.copy(BH.pos[i])
-                    #print("self pos changed from {} to {} ".format(self.pos[i], BH.pos[i]))
     
     def updateLocation(self, BH):
         for i in range(len(self.pos)):
             rand_num = self.random_generator()
             self.pos[i] += rand_num * (BH.pos[i]-self.pos[i])
-
-            #print("after update pos = ", self.pos[i])
         
     def random_generator(self):
         num = random.uniform(0, 1)
         return num
 
-    def get_score(self,lam, seed, label_dict,feature_index, X, Y):
+    def get_score(self,lam,label_dict,feature_index, X, Y):
         """
         Function to get the fitness score 
 
@@ -189,25 +183,20 @@ class Star:
         if X.shape[1] > 0:
             #if the subset is alreasy seen before, get the score and loss from cache
             if index_sum in score_cache:
-                fitness, ham_score, ham_loss = score_cache[index_sum]
-                return fitness, ham_score, ham_loss
+                fitness, ham_score, ham_loss, clf = score_cache[index_sum]
+                return fitness, ham_score, ham_loss, clf
         
             #if the subset is not seen before, get the score by running hamming CV
             #score,clf,correct, incorrect = hamming_scoreCV(X, Y)
-            score, loss = hamming_score(seed,X,Y)
+            score, loss, clf = hamming_score(X,Y)
 
             #Num of features selected
             features_selected = (size - len(feature_index))
-            #correlation distance sum for the subset attributes
-            corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
             fitness = (score / (1 + (lam*features_selected)))
-            #fitness = score - 0.05*corr_dist_sum
-            #fitness = score 
-            #print("fitness = \n", fitness)
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
-            score_cache[index_sum] = (fitness, score,1-score)
-            return fitness, score, (1-score)
+            score_cache[index_sum] = (fitness, score,1-score, clf)
+            return fitness, score, (1-score), clf
         else:
             return 0,0,0
 
@@ -226,12 +215,13 @@ def binary_pos(pos):
             binary_list.append(0) 
     return binary_list
 
-def fit(lam,seed,num_of_samples,num_iter, X, Y):
+def fit(lam, num_of_samples,num_iter, X, Y):
     """
     function to run blackhole feature selection algorithm
 
     Args:
 
+    lam : parameter
     num_of_samples : population size
     num_iter :  max_iterations
     X :  Dataframe of attributes. Headers is required
@@ -241,7 +231,7 @@ def fit(lam,seed,num_of_samples,num_iter, X, Y):
 
     Ham score : Hamming's score
     Ham loss :  Hamming's loss
-    Worst features :  Blackhole's feature index whose value is lesser than threshold (0.5). Just remove these features
+    Best subset
     """
     # Initializing number of stars 
     pop_number = num_of_samples
@@ -268,8 +258,7 @@ def fit(lam,seed,num_of_samples,num_iter, X, Y):
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
             if pop[i].isBH == False:
-                pop[i].updateFitness(lam, seed, label_dict,X, Y)
-                #print("star {} fitness {}= \n".format(pop[i].name, pop[i].fitness))
+                pop[i].updateFitness(lam, label_dict,X, Y)
             else:
                 pass
 
@@ -284,13 +273,10 @@ def fit(lam,seed,num_of_samples,num_iter, X, Y):
         else:
             pass
 
-        #print("global_bh name = {} || {}".format(pop[i].name, pop[i].fitness)) 
         #update the location of other stars
         for i in range(pop_number):
             if pop[i].isBH == False:
-                #print("updating {} location".format(pop[i].name))
-                pop[i].updateLocation(global_BH)
-                #print("new position = {}".format(pop[i].pos))
+                pop[i].updateLocation_binary(global_BH)
                
             else:
                 pass
@@ -304,8 +290,9 @@ def fit(lam,seed,num_of_samples,num_iter, X, Y):
             if isCrossingEventHorizon(global_BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
                 for j in range(dim):
                     pop[i].pos[j] = pop[i].random_generator()
-        #print("lamda = ", lam)
+
         #print("fitness || ", global_BH.fitness, "\n")
+        #print("lam = ", lam)
         features = select_worst_features(global_BH.pos)
         #print("hamming's loss = ", global_BH.ham_loss)
         #print("ham score = ", global_BH.ham_score)
@@ -330,15 +317,13 @@ def fit(lam,seed,num_of_samples,num_iter, X, Y):
     #print("hamming's score = ", global_BH.ham_score)
     #print("Done saving the best subset as csv file \n\n")
     #df = pd.concat((X_final, Y), axis = 1)
-    #name = 'BH_continous_yeast' + str(lam) + '1000iter.csv'
+    #name = 'BH_complete_binary_yeast' + str(lam) + '.csv'
     #print("saving {} ".format(name))
     #df.to_csv(name)
-    return X_final, global_BH.ham_score, global_BH.ham_loss
+    return X_final,worst_features, global_BH.ham_score, global_BH.ham_loss, global_BH.clf
 
 def Average(lst):
     return sum(lst) / len(lst)
-
-import statistics
 
 def variance(lst):
     return statistics.variance(lst)
@@ -356,43 +341,59 @@ if __name__ == "__main__":
     print("Y shape = : ", Y.shape)
     print("Y type: ", type(Y))
     
-    #Run with chi^2
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
+    #uncomment to run with chi^2
     X = univariate_feature_elimination(X,Y,15)
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=42)
+    print("X_train shape", X_train.shape)
+    print("X_test shape", X_test.shape)
+    print("Y_train shape", Y_train.shape)
+    print("Y_test shape = ", Y_test.shape)
  
-
-    #Run without BH, just the random forest CV
-    print("\n\n-----without feature selection lambda = 5----- \n\n")
- 
-    score, loss = hamming_score(42,X, Y)
-    print("score {} loss {}".format(score, loss))
-
-    #Run with BH
-    #print("\n\n---with feature selection lambda = 5------\n\n")
     
-    #Get the fitness, ham score, ham loss and the worst features
-    i = 0.0005
+    #parameters and variables intializations
+    lam = 0.0005
     loss_list = []
     feature_list = []
     rl_loss_list = []
     avg_precision_list = []
-    seed_list = [10,20,30,40,50,60,70,80,90,100,25,35,45,55,65,75,85,95,99,39,22,41]
+
+    #number of runs of program, right now only 1 run.
     start_time = time.time()
     for runs in range(20):
         print("---RUN {}---".format(runs))
-        seed = seed_list[runs]
-        print("seed = ", seed)
-        X_subset , ham_score, ham_loss = fit(i,seed,20,50,X,Y)
-        #print(X_subset)
-        loss, rl_loss, avg_precision = hamming_score(seed,X_subset,Y, metric = True)
-        print("ham loss = ", ham_loss, "loss = ", loss)
-        loss_list.append(ham_loss)
+        random.seed(runs)
+        seed = random.randint(1, 1000)
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
+
+        #run the algorithm
+        X_subset , inactive_features, train_score, train_loss, clf = fit(lam,20,50,X_train,Y_train)
+        #print("inactive features \n\n", inactive_features)
+        #print("length of inactive features = ", len(inactive_features))
+        X_test = X_test.drop(X_test.columns[inactive_features],axis=1)
+        #print("X_test shape = ", X_test.shape)
+        #print("best clf = ", clf)
+        #clf = MLkNN(k=10)
+        #caculate rl_loss, avg_prec for the best subset
+        #test_loss, rl_loss, avg_precision = hamming_score(X_test,Y_test, metric = True)
+        y_pred = clf.predict(np.array(X_test)).toarray()
+        test_loss = hamming_loss(y_pred, Y_test)
+        rl_loss = label_ranking_loss(Y_test,y_pred)
+        avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
+        #append all metrics to list to calculate avg 
+        loss_list.append(test_loss)
         rl_loss_list.append(rl_loss)
         avg_precision_list.append(avg_precision)
         feature_list.append(X_subset.shape[1])
-        print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
+        print("train loss {} features {}".format(train_loss, X_subset.shape[1]))
+        print("test loss with BH = {} and features selected = {}".format(test_loss, X_test.shape[1]))
+        print("rl loss || prrcision {} {} ".format(rl_loss, avg_precision))
     print("--- %s seconds ---" % (time.time() - start_time))
+    print("losst list \n\n {}".format(loss_list))
+    print("rl loss list \n\n{}".format(rl_loss_list))
+    print("precion list \n\n {}".format(avg_precision_list))
+    print("features list \n\n{}".format(feature_list))
     print("avg ham loss = ", Average(loss_list))
     print("avg rl loss = ", Average(rl_loss_list))
     print("avg of avg precision = ", Average(avg_precision_list))
@@ -401,7 +402,3 @@ if __name__ == "__main__":
     print("variance of rl loss {}".format(variance(rl_loss_list)))
     print("variance of presicion loss {}".format(variance(avg_precision_list)))
     print("variance of features size {}".format(variance(feature_list)))
-    print("rl loss list", rl_loss_list)
-    print("precision list", avg_precision_list)
-
-    

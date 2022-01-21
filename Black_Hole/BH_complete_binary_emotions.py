@@ -354,6 +354,7 @@ if __name__ == "__main__":
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     X = univariate_feature_elimination(X,Y,15)
+    
 
 
     #print the information about X and Y

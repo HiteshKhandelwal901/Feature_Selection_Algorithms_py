@@ -21,7 +21,8 @@ import copy
 from sklearn.metrics import label_ranking_loss
 import statistics 
 import time
-
+from sklearn.metrics import label_ranking_loss, label_ranking_average_precision_score, coverage_error
+from skmultilearn.adapt import MLkNN
 
 
 if not sys.warnoptions:
@@ -99,6 +100,7 @@ class Star:
         self.ham_loss = 1
         self.ham_score = 0
         self.name = name
+        self.clf = None
     
     def random_generator_binary(self):
         num = random.uniform(0, 1)
@@ -109,12 +111,12 @@ class Star:
 
 
     def updateFitness(self,lam, label_dict, X, Y):
-        self.fitness, self.ham_score, self.ham_loss = self.Obj_fun(lam, label_dict, X,Y) #set this to objective function
+        self.fitness, self.ham_score, self.ham_loss, self.clf = self.Obj_fun(lam, label_dict, X,Y) #set this to objective function
   
     def Obj_fun(self,lam, label_dict, X, Y):
         feature_index = self.select_features()
-        score, ham_score, ham_loss = self.get_score(lam, label_dict,feature_index, X, Y)
-        return score, ham_score, ham_loss
+        fitness, ham_score, ham_loss, clf = self.get_score(lam, label_dict,feature_index, X, Y)
+        return fitness, ham_score, ham_loss, clf
     
     def select_features(self):
 
@@ -181,22 +183,24 @@ class Star:
         if X.shape[1] > 0:
             #if the subset is alreasy seen before, get the score and loss from cache
             if index_sum in score_cache:
-                fitness, ham_score, ham_loss = score_cache[index_sum]
-                return fitness, ham_score, ham_loss
+                fitness, ham_score, ham_loss,clf = score_cache[index_sum]
+                return fitness, ham_score, ham_loss,clf
         
             #if the subset is not seen before, get the score by running hamming CV
             #score,clf,correct, incorrect = hamming_scoreCV(X, Y)
-            score, loss = hamming_score(X,Y)
+            score, loss, clf = hamming_score(X,Y)
 
             #Num of features selected
             features_selected = (size - len(feature_index))
             #fitness equation
             fitness = (score / (1 + (lam*features_selected)))
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
-            score_cache[index_sum] = (fitness, score,1-score)
-            return fitness, score, (1-score)
+            score_cache[index_sum] = (fitness, score,1-score, clf)
+            #print("going to return")
+            return (fitness, score, loss , clf)
         else:
-            return 0,0,0
+            #print("inside else")
+            return 0,0,0,0
 
     def __str__(self):
         print(self.pos)
@@ -318,7 +322,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     #name = 'BH_complete_binary_yeast' + str(lam) + '.csv'
     #print("saving {} ".format(name))
     #df.to_csv(name)
-    return X_final, global_BH.ham_score, global_BH.ham_loss
+    return X_final,worst_features, global_BH.ham_score, global_BH.ham_loss, global_BH.clf
 
 def Average(lst):
     return sum(lst) / len(lst)
@@ -334,6 +338,11 @@ if __name__ == "__main__":
     #Get X and Y from the data
     Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
     X = data.drop(columns= Y)
+
+    
+    #print("Type X_train = ", type(X_train))
+    #print(X_train)
+    
     print("INFO : \n\n")
     print("X shape : ", X.shape)
     print("X type = ", type(X))
@@ -345,9 +354,12 @@ if __name__ == "__main__":
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     #uncomment to run with chi^2
     X = univariate_feature_elimination(X,Y,15)
-
+   
+    #print("X_train shape", X_train.shape)
+    #print("X_test shape", X_test.shape)
+    #print("Y_train shape", Y_train.shape)
+    #print("Y_test shape = ", Y_test.shape)
  
-    print("\n\n---with feature selection------\n\n")
     
     #parameters and variables intializations
     lam = 0.0005
@@ -360,16 +372,31 @@ if __name__ == "__main__":
     start_time = time.time()
     for runs in range(20):
         print("---RUN {}---".format(runs))
+        random.seed(runs)
+        seed = random.randint(1, 1000)
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
+
         #run the algorithm
-        X_subset , ham_score, ham_loss = fit(lam,20,50,X,Y)
+        X_subset , inactive_features, train_score, train_loss, clf = fit(lam,20,50,X_train,Y_train)
+        #print("inactive features \n\n", inactive_features)
+        #print("length of inactive features = ", len(inactive_features))
+        X_test = X_test.drop(X_test.columns[inactive_features],axis=1)
+        #print("X_test shape = ", X_test.shape)
+        #print("best clf = ", clf)
+        #clf = MLkNN(k=10)
         #caculate rl_loss, avg_prec for the best subset
-        loss, rl_loss, avg_precision = hamming_score(X_subset,Y, metric = True)
+        #test_loss, rl_loss, avg_precision = hamming_score(X_test,Y_test, metric = True)
+        y_pred = clf.predict(np.array(X_test)).toarray()
+        test_loss = hamming_loss(y_pred, Y_test)
+        rl_loss = label_ranking_loss(Y_test,y_pred)
+        avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
         #append all metrics to list to calculate avg 
-        loss_list.append(ham_loss)
+        loss_list.append(test_loss)
         rl_loss_list.append(rl_loss)
         avg_precision_list.append(avg_precision)
         feature_list.append(X_subset.shape[1])
-        print("test loss with BH = {} and features selected = {}".format(ham_loss, X_subset.shape[1]))
+        print("train loss {} features {}".format(train_loss, X_subset.shape[1]))
+        print("test loss with BH = {} and features selected = {}".format(test_loss, X_test.shape[1]))
         print("rl loss || prrcision {} {} ".format(rl_loss, avg_precision))
     print("--- %s seconds ---" % (time.time() - start_time))
     print("losst list \n\n {}".format(loss_list))
@@ -384,7 +411,7 @@ if __name__ == "__main__":
     print("variance of rl loss {}".format(variance(rl_loss_list)))
     print("variance of presicion loss {}".format(variance(avg_precision_list)))
     print("variance of features size {}".format(variance(feature_list)))
-    
+
     
 
     

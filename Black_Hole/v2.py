@@ -26,7 +26,7 @@ DATA_PATH = './Data/scene.csv'
 REPORT_PATH = './reports'
 NUM_LABELS = 6 # no of labels 
 NUM_STARS = 20 # How many stars per iteration?
-NUM_EXPERIMENTS = 1 # How many experiments? ==> Useful for stability testing and remove randomness bias
+NUM_EXPERIMENTS = 20 # How many experiments? ==> Useful for stability testing and remove randomness bias
 NUM_ITERATIONS = 50 # How many iterations per experiment
 STAR_DIM = 294 # Max feature number
 LAMBDA = 0.0002 # Regularization parameter.
