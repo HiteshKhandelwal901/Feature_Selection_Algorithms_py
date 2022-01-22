@@ -23,13 +23,14 @@ import statistics
 import time
 from sklearn.metrics import label_ranking_loss, label_ranking_average_precision_score, coverage_error
 from skmultilearn.adapt import MLkNN
+from sklearn.neighbors import KNeighborsClassifier
 
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 4
+dim = 279
 score_cache = defaultdict()
 
 
@@ -100,6 +101,9 @@ class Star:
         self.ham_loss = 1
         self.ham_score = 0
         self.name = name
+        self.active_features = []
+        self.size = 0
+        #self.clf = KNeighborsClassifier(n_neighbors=10)
         self.clf = MLkNN(k=10)
     
     def random_generator_binary(self):
@@ -108,18 +112,12 @@ class Star:
             return 1
         else:
             return 0
-
-
-    def updateFitness(self,lam, label_dict, X, Y):
-        self.fitness, self.ham_score, self.ham_loss, self.clf = self.Obj_fun(lam, label_dict, X,Y) #set this to objective function
   
-    def Obj_fun(self,lam, label_dict, X, Y):
+    def updateFitness(self,lam, label_dict, X, Y):
         feature_index = self.select_features()
-        fitness, ham_score, ham_loss, clf = self.get_score(lam, label_dict,feature_index, X, Y)
-        return fitness, ham_score, ham_loss, clf
+        self.fitness, self.ham_score, self.ham_loss = self.get_score(lam, label_dict,feature_index, X, Y)
     
     def select_features(self):
-
         feature_index = []
         for index,dim in enumerate(self.pos):
             if dim<0.5:
@@ -168,6 +166,25 @@ class Star:
         num = random.uniform(0, 1)
         return num
 
+    def hamming_score(self, X,y, metric = False):
+        self.classifier_fit(X,y)
+        y_pred = self.classifier_predict(X)
+        loss = hamming_loss(y_pred, y)
+        score = 1-loss
+        if metric == True:
+            rl_loss = label_ranking_loss(y,y_pred)
+            avg_precision =  label_ranking_average_precision_score(y, y_pred)
+            return loss, rl_loss, avg_precision
+        return score, loss
+
+    def classifier_fit(self, X,y):
+        self.clf.fit(np.array(X), np.array(y))
+
+
+    def classifier_predict(self,X):
+        return self.clf.predict(np.array(X)).toarray()
+
+
     def get_score(self,lam,label_dict,feature_index, X, Y):
         """
         Function to get the fitness score 
@@ -202,13 +219,13 @@ class Star:
         if X.shape[1] > 0:
             #if the subset is alreasy seen before, get the score and loss from cache
             if index_sum in score_cache:
-                fitness, ham_score, ham_loss,clf = score_cache[index_sum]
-                return fitness, ham_score, ham_loss,clf
+                fitness, ham_score, ham_loss = score_cache[index_sum]
+                return fitness, ham_score, ham_loss
         
             #if the subset is not seen before, get the score by running hamming CV
             #score,clf,correct, incorrect = hamming_scoreCV(X, Y)
-            score, loss, clf = hamming_score(X,Y)
-            #score, loss = self.hamming_score(X,Y)
+            #score, loss, clf = hamming_score(X,Y)
+            score, loss = self.hamming_score(X,Y)
 
             #Num of features selected
             features_selected = (size - len(feature_index))
@@ -216,12 +233,14 @@ class Star:
             #fitness equation
             fitness = (score / (1 + (lam*features_selected))) - (0.5*corr_dist_sum)
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
-            score_cache[index_sum] = (fitness, score,1-score, clf)
+            score_cache[index_sum] = (fitness, score,1-score)
             #print("going to return")
-            return (fitness, score, loss , clf)
+            self.active_features = X.columns
+            self.size = X.shape[1]
+            return (fitness, score, loss)
         else:
             #print("inside else")
-            return 0,0,0,0
+            return 0,0,0
 
     def __str__(self):
         print(self.pos)
@@ -342,8 +361,9 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     #print("sample star pos = ", pop[12].pos)
     #print("blackhole pos = ", global_BH.pos)
     #Done training
-    worst_features = select_worst_features(global_BH.pos)
-    X_final= X.drop(X.columns[worst_features], axis = 1)
+    #worst_features = select_worst_features(global_BH.pos)
+    #print("worst features = ", worst_features)
+    #X_final= X.drop(X.columns[worst_features], axis = 1)
 
     
     
@@ -357,7 +377,8 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     #name = 'BH_complete_binary_yeast' + str(lam) + '.csv'
     #print("saving {} ".format(name))
     #df.to_csv(name)
-    return X_final,worst_features, global_BH.ham_score, global_BH.ham_loss, global_BH.clf
+    return global_BH
+    #return X_final,worst_features, global_BH.ham_score, global_BH.ham_loss, global_BH.clf
 
 def Average(lst):
     return sum(lst) / len(lst)
@@ -373,7 +394,18 @@ if __name__ == "__main__":
     #print("X_test shape", X_test.shape)
     #print("Y_train shape", Y_train.shape)
     #print("Y_test shape = ", Y_test.shape)
- 
+    data = pd.read_csv("Data/scene.csv")
+
+    #Get X and Y from the data
+    Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
+    X = data.drop(columns= Y)
+    #X = X.iloc[:, 1:10]
+    
+
+    scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
+    X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
+    #uncomment to run with chi^2
+    X = univariate_feature_elimination(X,Y,15)
     
     #parameters and variables intializations
     lam = 0.0005
@@ -384,33 +416,43 @@ if __name__ == "__main__":
 
     #number of runs of program, right now only 1 run.
     start_time = time.time()
-    for runs in range(1):
+    for runs in range(2):
         print("---RUN {}---".format(runs))
         random.seed(runs)
         seed = random.randint(1, 1000)
         #Reading the data into Dataframe
-        data = pd.read_csv("Data/scene.csv")
 
-        #Get X and Y from the data
-        Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
-        X = data.drop(columns= Y)
-        #X = X.iloc[:, 1:10]
-        
-
-        scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
-        X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
-        #uncomment to run with chi^2
-        X = univariate_feature_elimination(X,Y,15)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
         print("X train shape = ", X_train.shape)
         print("X test shape = ", X_test.shape)
         print("Y train shape", Y_train.shape)
         print("Y test shape = ", Y_test.shape)
         #run the algorithm
-        X_subset , inactive_features, train_score, train_loss, clf = fit(lam,5,10,X_train,Y_train)
+        BH = fit(lam,3,10,X_train,Y_train)
+        features = BH.active_features
+        train_loss = BH.ham_loss
+        size = BH.size
+        print("features = ", features)
+        print("size = ", size)
+        X_test_subset = X_test[features]
+        print("X_test_subset,", X_test_subset.shape)
+        #print(X_subset)
+        #print("train loss = ", BH.ham_loss)
         #print("inactive features \n\n", inactive_features)
         #print("length of inactive features = ", len(inactive_features))
-        X_test_subset = X_test.drop(X_test.columns[inactive_features],axis=1)
+        #X_test_subset = X_test.drop(X_test.columns[inactive_features],axis=1)
+        #print("global BH active features = ",BH.active_features)
+        #print("X train subset = ", X_subset.shape)
+        #print("X_test ater drop", X_test_subset.shape)
+        y_pred = BH.classifier_predict(X_test_subset)
+        test_loss = hamming_loss(y_pred, Y_test)
+        rl_loss = label_ranking_loss(Y_test,y_pred)
+        avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
+        print("test loss = ", test_loss)
+        print("rl_loss", rl_loss)
+        print("avg_precision", avg_precision)
+        #clf 
+        
         #print("X train subset = ", X_subset.shape)
         #print("X_test ater drop", X_test_subset.shape)
         #print("X_subset \n", X_subset.columns)
@@ -421,16 +463,12 @@ if __name__ == "__main__":
         #clf = MLkNN(k=10)
         #caculate rl_loss, avg_prec for the best subset
         #test_loss, rl_loss, avg_precision = hamming_score(X_test,Y_test, metric = True)
-        y_pred = clf.predict(X_test_subset).toarray()
-        test_loss = hamming_loss(y_pred, Y_test)
-        rl_loss = label_ranking_loss(Y_test,y_pred)
-        avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
+        
         #append all metrics to list to calculate avg 
         loss_list.append(test_loss)
         rl_loss_list.append(rl_loss)
         avg_precision_list.append(avg_precision)
-        feature_list.append(X_subset.shape[1])
-        print("train loss {} features {}".format(train_loss, X_subset.shape[1]))
+        feature_list.append(X_test_subset.shape[1])
         print("test loss with BH = {} and features selected = {}".format(test_loss, X_test_subset.shape[1]))
         print("rl loss || prrcision {} {} ".format(rl_loss, avg_precision))
     print("--- %s seconds ---" % (time.time() - start_time))
@@ -446,7 +484,5 @@ if __name__ == "__main__":
     print("variance of rl loss {}".format(variance(rl_loss_list)))
     print("variance of presicion loss {}".format(variance(avg_precision_list)))
     print("variance of features size {}".format(variance(feature_list)))
-
-    
 
     
