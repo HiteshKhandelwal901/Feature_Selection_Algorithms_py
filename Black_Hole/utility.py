@@ -24,6 +24,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import hamming_loss
 from skmultilearn.adapt import MLkNN
 from sklearn.metrics import label_ranking_loss, label_ranking_average_precision_score, coverage_error
+from sklearn.neighbors import KNeighborsClassifier
+
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -225,6 +227,7 @@ def hamming_score(X,y, metric = False):
     
     #clf = BinaryRelevance(classifier = RandomForestClassifier(random_state= 25))
     clf = MLkNN(k=10)
+    #clf = KNeighborsClassifier(n_neighbors=10)
     #print(type(X_train))
     clf.fit(np.array(X), np.array(y))
     y_pred = clf.predict(np.array(X)).toarray()

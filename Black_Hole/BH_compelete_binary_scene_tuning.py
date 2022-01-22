@@ -29,7 +29,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 279
+dim = 4
 score_cache = defaultdict()
 
 
@@ -100,7 +100,7 @@ class Star:
         self.ham_loss = 1
         self.ham_score = 0
         self.name = name
-        self.clf = None
+        self.clf = MLkNN(k=10)
     
     def random_generator_binary(self):
         num = random.uniform(0, 1)
@@ -126,6 +126,25 @@ class Star:
                 feature_index.append(index)
         return feature_index
 
+    def switch_activation(self):
+        #loop through each dimension
+        for i in range(len(self.pos)):
+            #print("dim {}".format(i))
+            rand_num = random.uniform(0, 1)
+            #print("rand_num = ", rand_num)
+            if rand_num <= 0.5:
+                #print("true lesser than 0.05")
+                #convert 0 to 1
+                if self.pos[i] == 0:
+                    #print("changing zero to 1")
+                    self.pos[i] = 1
+                #convert 1 to 0
+                elif self.pos[i] == 1:
+                    #print("changing 1 to 0")
+                    self.pos[i] = 0
+            else:
+                pass
+        #print("exiting after activation with new pos = ", self.pos)
 
 
     def random_generator_vector(self):
@@ -189,11 +208,13 @@ class Star:
             #if the subset is not seen before, get the score by running hamming CV
             #score,clf,correct, incorrect = hamming_scoreCV(X, Y)
             score, loss, clf = hamming_score(X,Y)
+            #score, loss = self.hamming_score(X,Y)
 
             #Num of features selected
             features_selected = (size - len(feature_index))
+            corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
-            fitness = (score / (1 + (lam*features_selected)))
+            fitness = (score / (1 + (lam*features_selected))) - (0.5*corr_dist_sum)
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
             score_cache[index_sum] = (fitness, score,1-score, clf)
             #print("going to return")
@@ -247,6 +268,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     #intialize parametrs and a global black hole ( best black hole)
     max_iter, it= num_iter, 0
     global_BH = Star(name = "default")
+    #print("default global BH pos = ", global_BH.pos)
     global_BH.isBH = True
 
     #get the bipirate distance_correlation dictionary for all ( X,Y)
@@ -255,7 +277,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
     #start the loop
     while it < max_iter:
-        #print("iloop iter || ", it)
+        print("iloop iter || ", it)
 
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
@@ -276,12 +298,16 @@ def fit(lam, num_of_samples,num_iter, X, Y):
             pass
 
         #update the location of other stars
+        #print("updating location of stars")
         for i in range(pop_number):
             if pop[i].isBH == False:
                 pop[i].updateLocation_binary(global_BH)
-               
-            else:
-                pass
+                #print("star {} after location update {}".format(i, pop[i].pos))
+            if it%5 == 0 and it>0:
+                #print("it % 5 true")
+                #print("before activation, start {} pos = {} ".format(i, pop[i].pos))
+                pop[i].switch_activation()
+                #print("after activation, start {} pos = {} ".format(i, pop[i].pos))
 
         #get the event horizon        
         eventHorizon = calcEvetHorizon(global_BH, pop)
@@ -290,8 +316,16 @@ def fit(lam, num_of_samples,num_iter, X, Y):
         #if in event horizon, reintialize stars randomly
         for i in range(pop_number):
             if isCrossingEventHorizon(global_BH, pop[i], eventHorizon) == True and pop[i].isBH == False:
+                #print("start {} crossing event horizion".format(i))
                 for j in range(dim):
-                    pop[i].pos[j] = pop[i].random_generator()
+                    #pop[i].pos[j] = pop[i].random_generator()
+                            num = random.uniform(0, 1)
+                            if num > 0.5:
+                                pop[i].pos[j] = 1
+                            else:
+                                pop[i].pos[j] = 0
+                #print("newly intialized position of star {} is {}".format(i,pop[i].pos))
+                    
 
         #print("fitness || ", global_BH.fitness, "\n")
         #print("lam = ", lam)
@@ -302,6 +336,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
         #print("\n\n")
         #print("converting BH to binary")
+
         it = it + 1
     
     #print("sample star pos = ", pop[12].pos)
@@ -332,28 +367,7 @@ def variance(lst):
 
 
 if __name__ == "__main__":
-    #Reading the data into Dataframe
-    data = pd.read_csv("Data/scene.csv")
 
-    #Get X and Y from the data
-    Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
-    X = data.drop(columns= Y)
-
-    
-    #print("Type X_train = ", type(X_train))
-    #print(X_train)
-    
-    print("INFO : \n\n")
-    print("X shape : ", X.shape)
-    print("X type = ", type(X))
-    print("Y shape = : ", Y.shape)
-    print("Y type: ", type(Y))
-    
-
-    scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
-    X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
-    #uncomment to run with chi^2
-    X = univariate_feature_elimination(X,Y,15)
    
     #print("X_train shape", X_train.shape)
     #print("X_test shape", X_test.shape)
@@ -370,23 +384,44 @@ if __name__ == "__main__":
 
     #number of runs of program, right now only 1 run.
     start_time = time.time()
-    for runs in range(20):
+    for runs in range(1):
         print("---RUN {}---".format(runs))
         random.seed(runs)
         seed = random.randint(1, 1000)
-        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
+        #Reading the data into Dataframe
+        data = pd.read_csv("Data/scene.csv")
 
+        #Get X and Y from the data
+        Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
+        X = data.drop(columns= Y)
+        #X = X.iloc[:, 1:10]
+        
+
+        scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
+        X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
+        #uncomment to run with chi^2
+        X = univariate_feature_elimination(X,Y,15)
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
+        print("X train shape = ", X_train.shape)
+        print("X test shape = ", X_test.shape)
+        print("Y train shape", Y_train.shape)
+        print("Y test shape = ", Y_test.shape)
         #run the algorithm
-        X_subset , inactive_features, train_score, train_loss, clf = fit(lam,20,50,X_train,Y_train)
+        X_subset , inactive_features, train_score, train_loss, clf = fit(lam,5,10,X_train,Y_train)
         #print("inactive features \n\n", inactive_features)
         #print("length of inactive features = ", len(inactive_features))
-        X_test = X_test.drop(X_test.columns[inactive_features],axis=1)
+        X_test_subset = X_test.drop(X_test.columns[inactive_features],axis=1)
+        #print("X train subset = ", X_subset.shape)
+        #print("X_test ater drop", X_test_subset.shape)
+        #print("X_subset \n", X_subset.columns)
+        #print("X_test \n",X_test_subset.columns)
+        #print(clf)
         #print("X_test shape = ", X_test.shape)
         #print("best clf = ", clf)
         #clf = MLkNN(k=10)
         #caculate rl_loss, avg_prec for the best subset
         #test_loss, rl_loss, avg_precision = hamming_score(X_test,Y_test, metric = True)
-        y_pred = clf.predict(np.array(X_test)).toarray()
+        y_pred = clf.predict(X_test_subset).toarray()
         test_loss = hamming_loss(y_pred, Y_test)
         rl_loss = label_ranking_loss(Y_test,y_pred)
         avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
@@ -396,7 +431,7 @@ if __name__ == "__main__":
         avg_precision_list.append(avg_precision)
         feature_list.append(X_subset.shape[1])
         print("train loss {} features {}".format(train_loss, X_subset.shape[1]))
-        print("test loss with BH = {} and features selected = {}".format(test_loss, X_test.shape[1]))
+        print("test loss with BH = {} and features selected = {}".format(test_loss, X_test_subset.shape[1]))
         print("rl loss || prrcision {} {} ".format(rl_loss, avg_precision))
     print("--- %s seconds ---" % (time.time() - start_time))
     print("losst list \n\n {}".format(loss_list))

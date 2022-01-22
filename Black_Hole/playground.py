@@ -54,3 +54,5 @@ print(feature_diff_list)
 """
 
 #df.drop(df.loc[:, df.columns[df.columns.str.startswith('F')]], axis=1)
+
+l = [0.100.090.100.100.100.100.100.100.090.100.100.090.100.090.100.100.100.090.09.0.10]
