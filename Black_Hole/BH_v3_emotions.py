@@ -11,6 +11,7 @@ from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.datasets import make_multilabel_classification
+from BH_run import avg
 from utility import hamming_score, weighted_label_correlations_70_30,hamming_scoreCV, hamming_get_accuracy, feature_correlation_sum, get_max_label_correlations, get_index_sum, get_max_label_correlations_gen, get_max_corr_label
 import sklearn
 from filters import remove_features, univariate_feature_elimination
@@ -24,13 +25,13 @@ import time
 from sklearn.metrics import label_ranking_loss, label_ranking_average_precision_score, coverage_error
 from skmultilearn.adapt import MLkNN
 from sklearn.neighbors import KNeighborsClassifier
-
+from multiprocessing import Pool, cpu_count
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 279
+dim = 57
 score_cache = defaultdict()
 
 
@@ -108,7 +109,7 @@ class Star:
     
     def random_generator_binary(self):
         num = random.uniform(0, 1)
-        if num > 0.1:
+        if num > 0.5:
             return 1
         else:
             return 0
@@ -130,7 +131,7 @@ class Star:
             #print("dim {}".format(i))
             rand_num = random.uniform(0, 1)
             #print("rand_num = ", rand_num)
-            if rand_num <= 0.5:
+            if rand_num <= 0.02:
                 #print("true lesser than 0.05")
                 #convert 0 to 1
                 if self.pos[i] == 0:
@@ -229,9 +230,10 @@ class Star:
 
             #Num of features selected
             features_selected = (size - len(feature_index))
-            corr_dist_sum = get_distance_corr(X,label_dict)
+            #corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
-            fitness = (score / (1 + (lam*features_selected))) - (0.5*corr_dist_sum)
+            #fitness = (score / (1 + (lam*features_selected))) - (0.5*corr_dist_sum)
+            fitness = (score / (1 + (lam*features_selected)))
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
             score_cache[index_sum] = (fitness, score,1-score)
             #print("going to return")
@@ -296,7 +298,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
     #start the loop
     while it < max_iter:
-        print("iloop iter || ", it)
+        #print("iloop iter || ", it)
 
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
@@ -386,103 +388,79 @@ def Average(lst):
 def variance(lst):
     return statistics.variance(lst)
 
+def single_run(experiment_id):
+    random.seed(experiment_id)
+    seed = random.randint(1, 1000)
+    print("Running experiment number: ", experiment_id)
+    #print("seed = ", seed)
 
-if __name__ == "__main__":
-
-   
-    #print("X_train shape", X_train.shape)
-    #print("X_test shape", X_test.shape)
-    #print("Y_train shape", Y_train.shape)
-    #print("Y_test shape = ", Y_test.shape)
-    data = pd.read_csv("Data/scene.csv")
-
-    #Get X and Y from the data
-    Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
-    X = data.drop(columns= Y)
-    #X = X.iloc[:, 1:10]
-    
-
+    data = pd.read_csv('Data/emotions_clean.csv')
+    X = data.iloc[:, :-6]
+    Y = data.iloc[:, -6:]
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
-    #uncomment to run with chi^2
     X = univariate_feature_elimination(X,Y,15)
+
+    
+
     
     #parameters and variables intializations
     lam = 0.0005
-    loss_list = []
-    feature_list = []
-    rl_loss_list = []
-    avg_precision_list = []
+    seed = random.randint(1, 1000)
+    #Reading the data into Dataframe
 
-    #number of runs of program, right now only 1 run.
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
+    #run the algorithm
+    BH = fit(lam,20,50,X_train,Y_train)
+    features = BH.active_features
+    train_loss = BH.ham_loss
+    size = BH.size
+
+    X_test_subset = X_test[features]
+    y_pred = BH.classifier_predict(X_test_subset)
+    test_loss = hamming_loss(y_pred, Y_test)
+    rl_loss = label_ranking_loss(Y_test,y_pred)
+    avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
+    metric = defaultdict()
+    metric['test_loss'] = test_loss
+    metric['rl_loss'] = rl_loss
+    metric['avg_precision'] = avg_precision
+    metric['feature_size'] = size
+    return metric
+
+REPORT_PATH = './reports'
+
+def create_report(metric):
+    report_df = pd.DataFrame(metric)
+    print("Report:", report_df)
+    if not os.path.exists(REPORT_PATH):
+        print("Creating Report directory", REPORT_PATH)
+        os.mkdir(REPORT_PATH)
+    report_df.to_excel(os.path.join(REPORT_PATH, 'report_flip_emotions_20stars_0.02.xlsx'))
+
+def run_experiments(num_experiments: int):
+    """
+    Perform Black Hole Algorithms multiple item with different random seed each time
+    Processess the runs parallely depending upon the num of processes/experiment
+    """
+    # TODO:   Add checks to ensure processes are auto killed after processed to avoid stale processes
+    experiment_list = list(range(num_experiments))
+    with Pool(processes=min(num_experiments, 8, cpu_count())) as pool:
+        res = pool.map(single_run, experiment_list)   
+        print(res)
+    create_report(res)
+    print("AVG loss : ", Average(res['test_loss']))
+    print("AVG features : ", Average(res['feature_size']))
+    print("AVG rl loss : ", Average(res['rl_loss']))
+
+def main():
+    run_experiments(8)
+
+if __name__ == "__main__":
     start_time = time.time()
-    for runs in range(2):
-        print("---RUN {}---".format(runs))
-        random.seed(runs)
-        seed = random.randint(1, 1000)
-        #Reading the data into Dataframe
+    main()
+    print("Time Taken:", time.time()-start_time)
 
-        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
-        #print("X train shape = ", X_train.shape)
-        #print("X test shape = ", X_test.shape)
-        #print("Y train shape", Y_train.shape)
-        #print("Y test shape = ", Y_test.shape)
-        #run the algorithm
-        BH = fit(lam,20,50,X_train,Y_train)
-        features = BH.active_features
-        train_loss = BH.ham_loss
-        size = BH.size
-        #print("features = ", features)
-        #print("size = ", size)
-        X_test_subset = X_test[features]
-        #print("X_test_subset,", X_test_subset.shape)
-        #print(X_subset)
-        #print("train loss = ", BH.ham_loss)
-        #print("inactive features \n\n", inactive_features)
-        #print("length of inactive features = ", len(inactive_features))
-        #X_test_subset = X_test.drop(X_test.columns[inactive_features],axis=1)
-        #print("global BH active features = ",BH.active_features)
-        #print("X train subset = ", X_subset.shape)
-        #print("X_test ater drop", X_test_subset.shape)
-        y_pred = BH.classifier_predict(X_test_subset)
-        test_loss = hamming_loss(y_pred, Y_test)
-        rl_loss = label_ranking_loss(Y_test,y_pred)
-        avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
-        print("test loss = ", test_loss)
-        print("rl_loss", rl_loss)
-        print("avg_precision", avg_precision)
-        #clf 
-        
-        #print("X train subset = ", X_subset.shape)
-        #print("X_test ater drop", X_test_subset.shape)
-        #print("X_subset \n", X_subset.columns)
-        #print("X_test \n",X_test_subset.columns)
-        #print(clf)
-        #print("X_test shape = ", X_test.shape)
-        #print("best clf = ", clf)
-        #clf = MLkNN(k=10)
-        #caculate rl_loss, avg_prec for the best subset
-        #test_loss, rl_loss, avg_precision = hamming_score(X_test,Y_test, metric = True)
-        
-        #append all metrics to list to calculate avg 
-        loss_list.append(test_loss)
-        rl_loss_list.append(rl_loss)
-        avg_precision_list.append(avg_precision)
-        feature_list.append(X_test_subset.shape[1])
-        #print("test loss with BH = {} and features selected = {}".format(test_loss, X_test_subset.shape[1]))
-        #print("rl loss || prrcision {} {} ".format(rl_loss, avg_precision))
-    print("--- %s seconds ---" % (time.time() - start_time))
-    print("losst list \n\n {}".format(loss_list))
-    print("rl loss list \n\n{}".format(rl_loss_list))
-    print("precion list \n\n {}".format(avg_precision_list))
-    print("features list \n\n{}".format(feature_list))
-    print("avg ham loss = ", Average(loss_list))
-    print("avg rl loss = ", Average(rl_loss_list))
-    print("avg of avg precision = ", Average(avg_precision_list))
-    print("AVG features selected = ", Average(feature_list))
-    print("variance of ham loss {}".format(variance(loss_list)))
-    print("variance of rl loss {}".format(variance(rl_loss_list)))
-    print("variance of presicion loss {}".format(variance(avg_precision_list)))
-    print("variance of features size {}".format(variance(feature_list)))
+    
 
     
