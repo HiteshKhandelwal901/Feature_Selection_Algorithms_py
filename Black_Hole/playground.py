@@ -1,58 +1,60 @@
-from skmultilearn.adapt import MLkNN
-from scipy import sparse
-from skmultilearn.dataset import load_dataset
-import sklearn.metrics as metrics
-from sklearn.metrics import hamming_loss
+import random
+
+dim = 7
 
 
-import warnings
-warnings.filterwarnings("ignore")
+class star:
 
-"""
-X_train, y_train, feature_names, label_names = load_dataset('emotions', 'train')
-X_test, y_test, _, _ = load_dataset('emotions', 'test')
+    def __init__(self,name, fitness):
+        self.name = name
+        self.fitness = fitness
+        self.pos = [self.random_generator_binary() for i in range(9)]
 
-clf = MLkNN(k=5)
+    def random_generator_binary(self):
+        num = random.uniform(0, 1)
+        if num > 0.5:
+            return 1
+        else:
+            return 0
+        
+def crossover(pop):
+    
+    new_pop = []
+    name =0
+    while len(new_pop)!= len(pop):
+        print("len of new pop = ", len(new_pop))
+        k = random.randrange(1,dim)
+        rand_nums = random.sample(range(1, 4), 2)
+        i = rand_nums[0]
+        j = rand_nums[1]
+        print("rand_nums = i= {} j = {} k = {}".format(i,j,k))
+        print("star selected at random  = {} \n {}".format(pop[i].pos, pop[j].pos))
+        
+        new_star1 = star(str(name), 30)
+        new_star2 = star(str(name+1), 45)
+        new_star1.pos = pop[i].pos[:k] + pop[j].pos[k:]
+        new_star2.pos = pop[j].pos[:k] + pop[i].pos[k:]
+        print("new star1 pos {}".format(new_star1.pos))
+        print("new star2 pos = {}".format(new_star2.pos))
+        new_pop.append(new_star1)
+        new_pop.append(new_star2)
+        name = name+2
 
-clf.fit(X_train, y_train)
 
-y_pred = clf.predict(X_test)
+    return new_pop
 
-print(type(y_pred))  # <class 'scipy.sparse.lil.lil_matrix'>
+if __name__ == "__main__":
+    pop = []
+    print("pop = ", pop)
+    for i in range(4):
+        print("i = ", i)
+        pop.append(star(str(i), i+10))
+        print("initalized star {} {}".format(pop[i].name, pop[i].pos))
+    
+    pop = crossover(pop)
+    print("new pop = ", pop)
+    for i in range(len(pop)):
+        print(pop[i].pos, pop[i].name)
 
-print(type(y_pred.toarray()))  # <class 'numpy.ndarray'>
 
-y_pred_csr = sparse.csr_matrix(y_pred).toarray()
-
-print(type(y_pred_csr))  # <class 'scipy.sparse.csr.csr_matrix'>
-
-accuracy = metrics.accuracy_score(y_test, y_pred)
-print(accuracy)  # 0.148
-
-loss = hamming_loss(y_pred, y_test)
-
-print("loss = ", loss)
-"""
-"""
-loss_list = []
-features_list = []
-loss_diff_list = []
-feature_diff_list = []
-
-for i in range(loss_list):
-    diff = abs(loss_list[i] - loss_list[i+1])
-    loss_diff_list.append(diff)
-
-print(loss_diff_list)
-
-for i in range(features_list):
-    diff = abs(features_list[i+1] - features_list[i])
-    print("\n", diff)
-    feature_diff_list.append(diff)
-
-print(feature_diff_list)
-"""
-
-#df.drop(df.loc[:, df.columns[df.columns.str.startswith('F')]], axis=1)
-
-l = [0.100.090.100.100.100.100.100.100.090.100.100.090.100.090.100.100.100.090.09.0.10]
+    

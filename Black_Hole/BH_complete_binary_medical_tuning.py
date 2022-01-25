@@ -195,7 +195,7 @@ class Star:
             #Num of features selected
             features_selected = (size - len(feature_index))
             #correlation distance sum for the subset attributes
-            corr_dist_sum = get_distance_corr(X,label_dict)
+            #corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
             fitness = (score / (1 + (lam*features_selected)))
             #fitness = score - 0.05*corr_dist_sum
@@ -213,14 +213,9 @@ class Star:
 
 
 
-def binary_pos(pos):
-    binary_list= []
-    for p in pos:
-        if p >= 0.5:
-            binary_list.append(1)
-        else:
-            binary_list.append(0) 
-    return binary_list
+
+
+
 
 def fit(lam, num_of_samples,num_iter, X, Y):
     """

@@ -25,6 +25,7 @@ from sklearn.metrics import label_ranking_loss, label_ranking_average_precision_
 from skmultilearn.adapt import MLkNN
 from sklearn.neighbors import KNeighborsClassifier
 from multiprocessing import Pool, cpu_count
+from sklearn.metrics import accuracy_score
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -249,14 +250,7 @@ class Star:
 
 
 
-def binary_pos(pos):
-    binary_list= []
-    for p in pos:
-        if p >= 0.5:
-            binary_list.append(1)
-        else:
-            binary_list.append(0) 
-    return binary_list
+
 
 def fit(lam, num_of_samples,num_iter, X, Y):
     """
@@ -419,12 +413,14 @@ def single_run(experiment_id):
     X_test_subset = X_test[features]
     y_pred = BH.classifier_predict(X_test_subset)
     test_loss = hamming_loss(y_pred, Y_test)
+    test_accuracy = accuracy_score(y_pred, Y_test)
     rl_loss = label_ranking_loss(Y_test,y_pred)
     avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
     metric = defaultdict()
     metric['test_loss'] = test_loss
     metric['rl_loss'] = rl_loss
     metric['avg_precision'] = avg_precision
+    metric['accuracy'] = test_accuracy
     metric['feature_size'] = size
     return metric
 

@@ -409,13 +409,13 @@ def single_run(experiment_id):
 
     
     #parameters and variables intializations
-    lam = 0.0005
+    lam = 0.0000003
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
     #run the algorithm
-    BH = fit(lam,30,50,X_train,Y_train)
+    BH = fit(lam,20,50,X_train,Y_train)
     features = BH.active_features
     train_loss = BH.ham_loss
     size = BH.size
@@ -440,7 +440,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'report_flip_yeast_30stars_0.03.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'report_flip_yeast_20stars_0.02_lam0.0000003.xlsx'))
 
 def run_experiments(num_experiments: int):
     """
