@@ -449,9 +449,9 @@ def run_experiments(num_experiments: int):
         res = pool.map(single_run, experiment_list)   
         print(res)
     create_report(res)
-    print("AVG loss : ", Average(res['test_loss']))
-    print("AVG features : ", Average(res['feature_size']))
-    print("AVG rl loss : ", Average(res['rl_loss']))
+    #print("AVG loss : ", Average(res['test_loss']))
+    #print("AVG features : ", Average(res['feature_size']))
+    #print("AVG rl loss : ", Average(res['rl_loss']))
 
 def main():
     run_experiments(8)
