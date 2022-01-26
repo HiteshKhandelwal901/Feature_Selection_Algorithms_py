@@ -403,7 +403,7 @@ def single_run(experiment_id):
     print("x shape = ", X.shape)
     
     #parameters and variables intializations
-    lam = 100
+    lam = 0.00000001
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
@@ -434,7 +434,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'report_medical_flip_20stars_0.02_lam2.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'report_medical_flip_20stars_0.02_lam0.0000001.xlsx'))
 
 def run_experiments(num_experiments: int):
     """
@@ -449,7 +449,7 @@ def run_experiments(num_experiments: int):
     create_report(res)
 
 def main():
-    run_experiments(1)
+    run_experiments(4)
 
 if __name__ == "__main__":
     start_time = time.time()
