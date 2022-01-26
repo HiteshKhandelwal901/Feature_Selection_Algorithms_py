@@ -31,7 +31,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 5
+dim = 279
 score_cache = defaultdict()
 
 
@@ -263,7 +263,6 @@ def crossover(pop):
     
     new_pop = []
     name =0
-    print("length of pop = ", len(pop))
     while len(new_pop) != len(pop):
         #print("len of new pop = ", len(new_pop))
         rand_nums = random.sample(range(1, 4), 2)
@@ -308,7 +307,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     pop = []
     for i in range(0, pop_number):
         pop.append(Star(str(i)))
-        print("start {} initalized pos {}".format(pop[i].name, pop[i].pos))
+        #print("start {} initalized pos {}".format(pop[i].name, pop[i].pos))
 
 
     #intialize parametrs and a global black hole ( best black hole)
@@ -330,7 +329,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
             
             if pop[i].isBH == False:
                 pop[i].updateFitness(lam, label_dict,X, Y)
-                print("star {} fitness = {} pos = {}".format(pop[i].name, pop[i].fitness, pop[i].pos))
+                #print("star {} fitness = {} pos = {}".format(pop[i].name, pop[i].fitness, pop[i].pos))
             else:
                 pass
 
@@ -339,25 +338,25 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
         #if the best star in this iteration is fitter than global make that global
         if local_BH.fitness > global_BH.fitness:
-            print("found new black_hole")
+            #print("found new black_hole")
             global_BH.isBH = False
             global_BH = local_BH
             global_BH.isBH = True
         else:
             pass
-        print("black hole name = {}  fitness = {} pos = {}\n\n".format(global_BH.name, global_BH.fitness, global_BH.pos))
+        #print("black hole name = {}  fitness = {} pos = {}\n\n".format(global_BH.name, global_BH.fitness, global_BH.pos))
 
         #update the location of other stars
-        print("updating location of stars")
+        #print("updating location of stars")
         for i in range(pop_number):
             if pop[i].isBH == False:
                 pop[i].updateLocation_binary(global_BH)
-                print("star {} after location update {}".format(pop[i].name, pop[i].pos))
-        if it%2 == 0:
-            print("it%2 true")
-            print("applying crossover")
+                #print("star {} after location update {}".format(pop[i].name, pop[i].pos))
+        if it%5 == 0:
+            #print("it%2 true")
+            #print("applying crossover")
             pop = crossover(pop)
-            print("printing population after crossover")
+            #print("printing population after crossover")
             for i in range(len(pop)):
                 #print("star {} new position after crossover {}".format(pop[i].name, pop[i].pos))
                 #print("it % 5 true")
@@ -383,12 +382,12 @@ def fit(lam, num_of_samples,num_iter, X, Y):
                 #print("newly intialized position of star {} is {}".format(i,pop[i].pos))
                     
 
-        #print("fitness || ", global_BH.fitness, "\n")
+        print("fitness || ", global_BH.fitness, "\n")
         #print("lam = ", lam)
         features = select_worst_features(global_BH.pos)
         #print("hamming's loss = ", global_BH.ham_loss)
         #print("ham score = ", global_BH.ham_score)
-        #print("number of features selected = ", (dim-len(features)))
+        print("number of features selected = ", (dim-len(features)))
 
         #print("\n\n")
         #print("converting BH to binary")
@@ -431,24 +430,21 @@ def single_run(experiment_id):
     #Get X and Y from the data
     Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
     X = data.drop(columns= Y)
-    #X = X.iloc[:, 1:10]
     
 
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     #uncomment to run with chi^2
-    #X = univariate_feature_elimination(X,Y,15)
-    X = X.iloc[:,1:6]
-    print("shape = ", X.shape)
+    X = univariate_feature_elimination(X,Y,15)
     
     #parameters and variables intializations
-    lam = 0.0005
+    lam = 0.0007
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
     #run the algorithm
-    BH = fit(lam,6,10,X_train,Y_train)
+    BH = fit(lam,20,50,X_train,Y_train)
     features = BH.active_features
     train_loss = BH.ham_loss
     size = BH.size
@@ -475,7 +471,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'report_scene_flip_30stars_0.03.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'report_scene_flip_crossover_20stars_0.0007.xlsx'))
 
 def run_experiments(num_experiments: int):
     """
@@ -486,8 +482,8 @@ def run_experiments(num_experiments: int):
     experiment_list = list(range(num_experiments))
     with Pool(processes=min(num_experiments, 8, cpu_count())) as pool:
         res = pool.map(single_run, experiment_list)   
-        print(res)
-    #create_report(res)
+        #print(res)
+    create_report(res)
 
 def main():
     run_experiments(1)
