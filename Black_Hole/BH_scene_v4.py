@@ -486,7 +486,7 @@ def run_experiments(num_experiments: int):
     create_report(res)
 
 def main():
-    run_experiments(1)
+    run_experiments(3)
 
 if __name__ == "__main__":
     start_time = time.time()

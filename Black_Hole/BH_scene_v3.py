@@ -291,7 +291,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
     #start the loop
     while it < max_iter:
-        #print("iloop iter || ", it)
+        print("iloop iter || ", it)
 
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
@@ -341,10 +341,10 @@ def fit(lam, num_of_samples,num_iter, X, Y):
                 #print("newly intialized position of star {} is {}".format(i,pop[i].pos))
                     
 
-        #print("fitness || ", global_BH.fitness, "\n")
+        print("fitness || ", global_BH.fitness, "\n")
         #print("lam = ", lam)
         features = select_worst_features(global_BH.pos)
-        #print("hamming's loss = ", global_BH.ham_loss)
+        print("hamming's loss = ", global_BH.ham_loss)
         #print("ham score = ", global_BH.ham_score)
         #print("number of features selected = ", (dim-len(features)))
 
@@ -399,13 +399,13 @@ def single_run(experiment_id):
     X = univariate_feature_elimination(X,Y,15)
     
     #parameters and variables intializations
-    lam = 0.0005
+    lam = 0.0000001
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
     #run the algorithm
-    BH = fit(lam,30,50,X_train,Y_train)
+    BH = fit(lam,30,10,X_train,Y_train)
     features = BH.active_features
     train_loss = BH.ham_loss
     size = BH.size
@@ -432,7 +432,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'report_scene_flip_30stars_0.03.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'report_scene_flip_20stars_0.02_lam0.0000001+10iteraion.xlsx'))
 
 def run_experiments(num_experiments: int):
     """
@@ -447,7 +447,7 @@ def run_experiments(num_experiments: int):
     create_report(res)
 
 def main():
-    run_experiments(8)
+    run_experiments(1)
 
 if __name__ == "__main__":
     start_time = time.time()
