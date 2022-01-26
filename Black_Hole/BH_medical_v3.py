@@ -30,7 +30,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 279
+dim = 1433
 score_cache = defaultdict()
 
 
@@ -297,7 +297,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
 
     #start the loop
     while it < max_iter:
-        #print("iloop iter || ", it)
+        print("iloop iter || ", it)
 
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
@@ -347,12 +347,12 @@ def fit(lam, num_of_samples,num_iter, X, Y):
                 #print("newly intialized position of star {} is {}".format(i,pop[i].pos))
                     
 
-        #print("fitness || ", global_BH.fitness, "\n")
+        print("fitness || ", global_BH.fitness, "\n")
         #print("lam = ", lam)
         features = select_worst_features(global_BH.pos)
-        #print("hamming's loss = ", global_BH.ham_loss)
+        print("hamming's loss = ", global_BH.ham_loss)
         #print("ham score = ", global_BH.ham_score)
-        #print("number of features selected = ", (dim-len(features)))
+        print("number of features selected = ", (dim-len(features)))
 
         #print("\n\n")
         #print("converting BH to binary")
@@ -400,9 +400,10 @@ def single_run(experiment_id):
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     #uncomment to run with chi^2
     X = univariate_feature_elimination(X,Y,15)
+    print("x shape = ", X.shape)
     
     #parameters and variables intializations
-    lam = 0.0005
+    lam = 100
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
@@ -433,7 +434,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'report_medical_flip_20stars_0.02.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'report_medical_flip_20stars_0.02_lam2.xlsx'))
 
 def run_experiments(num_experiments: int):
     """
@@ -448,7 +449,7 @@ def run_experiments(num_experiments: int):
     create_report(res)
 
 def main():
-    run_experiments(8)
+    run_experiments(1)
 
 if __name__ == "__main__":
     start_time = time.time()

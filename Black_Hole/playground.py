@@ -16,6 +16,9 @@ class star:
             return 1
         else:
             return 0
+
+    def update_fitness(self):
+        self.fitness = random.uniform(0,1)
         
 def crossover(pop):
     
@@ -36,9 +39,20 @@ def crossover(pop):
         new_star2.pos = pop[j].pos[:k] + pop[i].pos[k:]
         print("new star1 pos {}".format(new_star1.pos))
         print("new star2 pos = {}".format(new_star2.pos))
+        new_star1.update_fitness()
+        new_star2.update_fitness()
         new_pop.append(new_star1)
         new_pop.append(new_star2)
         name = name+2
+
+    stars_list = pop + new_pop
+    sorted_stars_list = sorted(stars_list, key = lambda x: x.fitness, reverse= True)
+    pop = sorted_stars_list[:4]
+    print("length of sorted star list = ", len(pop))
+    print("printing sorted fitness")
+    for stars in sorted_stars_list:
+        print(stars.fitness)
+    print("length of stars_list", stars_list)
 
 
     return new_pop
