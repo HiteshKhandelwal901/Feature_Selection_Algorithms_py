@@ -409,7 +409,7 @@ def single_run(experiment_id):
 
     
     #parameters and variables intializations
-    lam = 0.007
+    lam = 
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 

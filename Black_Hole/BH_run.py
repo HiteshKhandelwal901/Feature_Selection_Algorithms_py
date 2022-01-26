@@ -46,7 +46,7 @@ if __name__ == "__main__":
     #print("covg_error = ", covg_error)
     """
 
-    data = pd.read_excel('reports/report_scene_flip_20stars_0.02_lam0.0000001+10iteraion.xlsx')
+    data = pd.read_excel('reports/report_scene_flip_crossover_20stars_0.0007.xlsx')
     test_loss = data['test_loss']
     rl_loss = data['rl_loss']
     avg_precision = data['avg_precision']
