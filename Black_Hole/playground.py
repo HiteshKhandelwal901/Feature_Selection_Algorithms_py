@@ -52,10 +52,11 @@ def crossover(pop):
     print("printing sorted fitness")
     for stars in sorted_stars_list:
         print(stars.fitness)
-    print("length of stars_list", stars_list)
+    print("length of stars_list", len(sorted_stars_list[:2]))
+    print("length after shorting ", len(sorted_stars_list[:2]))
 
 
-    return new_pop
+    return stars_list[:2]
 
 if __name__ == "__main__":
     pop = []

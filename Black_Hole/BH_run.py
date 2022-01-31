@@ -46,16 +46,27 @@ if __name__ == "__main__":
     #print("covg_error = ", covg_error)
     """
 
-    data = pd.read_excel('reports/report_medical_flip_20stars_0.02_lam0.007.xlsx')
+    data2 = pd.read_excel('reports/batch1_crossover_Scene.xlsx')
+    data3 = pd.read_excel('reports/batch2_crossover_Scene.xlsx')
+    data4 = pd.read_excel('reports/batch3_crossover_Scene.xlsx')
+    data5 = pd.read_excel('reports/batch4_crossover_Scene.xlsx')
+    #data5 = pd.read_excel('reports/report_crossover_flip_yeast_20stars_0.02lam0.0005.xlsx')
+    
+    data = pd.concat([data2, data3, data4, data5])
+    data.to_excel('reports/20runsscene.xlsx')
     test_loss = data['test_loss']
     rl_loss = data['rl_loss']
     avg_precision = data['avg_precision']
     feature_size = data['feature_size']
-
+    acc = data['accuracy']
+ 
+    print(data)
     print("Test loss avg :", avg(test_loss))
+    print("Accuracy :", avg(acc))
     print("rl loss avg :", avg(rl_loss))
     print("avg precision  :", avg(avg_precision))
     print("feature size avg :", avg(feature_size))
 
+    
 
     

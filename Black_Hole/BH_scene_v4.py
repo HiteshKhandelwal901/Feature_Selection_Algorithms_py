@@ -352,7 +352,7 @@ def fit(lam, num_of_samples,num_iter, X, Y):
             if pop[i].isBH == False:
                 pop[i].updateLocation_binary(global_BH)
                 #print("star {} after location update {}".format(pop[i].name, pop[i].pos))
-        if it%5 == 0:
+        if it%5 == 0 and it>0:
             #print("it%2 true")
             #print("applying crossover")
             pop = crossover(pop)
@@ -471,7 +471,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'report_scene_flip_crossover_20stars_0.0007.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'batch2_report_scene_crossover.xlsx'))
 
 def run_experiments(num_experiments: int):
     """
@@ -486,7 +486,7 @@ def run_experiments(num_experiments: int):
     create_report(res)
 
 def main():
-    run_experiments(3)
+    run_experiments(10)
 
 if __name__ == "__main__":
     start_time = time.time()

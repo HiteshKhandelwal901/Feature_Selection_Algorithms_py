@@ -25,15 +25,19 @@ from sklearn.metrics import label_ranking_loss, label_ranking_average_precision_
 from skmultilearn.adapt import MLkNN
 from sklearn.neighbors import KNeighborsClassifier
 from multiprocessing import Pool, cpu_count
+from sklearn.metrics import accuracy_score
+
+from v2 import NUM_STARS
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 1433
+dim = 57
 score_cache = defaultdict()
 
-
+NUM_STARS = 20
+NUM_ITER = 50
 
 def create_subset(df, dst_df):
     cols = df.columns
@@ -130,7 +134,7 @@ class Star:
             #print("dim {}".format(i))
             rand_num = random.uniform(0, 1)
             #print("rand_num = ", rand_num)
-            if rand_num <= 0.02:
+            if rand_num <= 0.03:
                 #print("true lesser than 0.05")
                 #convert 0 to 1
                 if self.pos[i] == 0:
@@ -248,17 +252,35 @@ class Star:
         return "Is Bh: " + str(self.isBH) + " fitness: " + str(self.fitness)
 
 
+def crossover(pop, lam, label_dict,X, Y):
+    
+    new_pop = []
+    name =0
+    #print("length of pop = ", len(pop))
+    while len(new_pop)!= len(pop):
+        #print("len of new pop = ", len(new_pop))
+        k = random.randrange(1,dim)
+        rand_nums = random.sample(range(0, NUM_STARS), 2)
+        i = rand_nums[0]
+        j = rand_nums[1]
+        
+        new_star1 = Star((str(name) + "c"))
+        new_star2 = Star((str(name+1) + "c"))
+        new_star1.pos = pop[i].pos[:k] + pop[j].pos[k:]
+        new_star2.pos = pop[j].pos[:k] + pop[i].pos[k:]
+        new_star1.updateFitness(lam, label_dict,X, Y)
+        new_star2.updateFitness(lam, label_dict,X, Y)
+        new_pop.append(new_star1)
+        new_pop.append(new_star2)
+        name = name+2
 
-def binary_pos(pos):
-    binary_list= []
-    for p in pos:
-        if p >= 0.5:
-            binary_list.append(1)
-        else:
-            binary_list.append(0) 
-    return binary_list
+    stars_list = pop + new_pop
+    #print("list concatinated length", len(stars_list))
+    sorted_stars_list = sorted(stars_list, key = lambda x: x.fitness, reverse= True) 
+    return sorted_stars_list[:NUM_STARS]
 
-def fit(lam, num_of_samples,num_iter, X, Y):
+
+def fit(experiment_id, lam, num_of_samples,num_iter, X, Y):
     """
     function to run blackhole feature selection algorithm
 
@@ -299,12 +321,23 @@ def fit(lam, num_of_samples,num_iter, X, Y):
     while it < max_iter:
         print("iloop iter || ", it)
 
+        #crossover 
+        if it%5 == 0 and it>0:
+            pop = crossover(pop, lam, label_dict,X, Y)
+            print("returned pop length = ", len(pop))
+            #flip algorithm
+            for i in range(len(pop)):
+                if pop[i].isBH == False:
+                    pop[i].switch_activation()
+
+
+
+
+
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
-            if pop[i].isBH == False:
-                pop[i].updateFitness(lam, label_dict,X, Y)
-            else:
-                pass
+            #if pop[i].isBH == False:
+            pop[i].updateFitness(lam, label_dict,X, Y)
 
         #get the best star in this current iteration
         local_BH = pop[selectBH(pop)]
@@ -323,11 +356,6 @@ def fit(lam, num_of_samples,num_iter, X, Y):
             if pop[i].isBH == False:
                 pop[i].updateLocation_binary(global_BH)
                 #print("star {} after location update {}".format(i, pop[i].pos))
-            if it%5 == 0 and it>0:
-                #print("it % 5 true")
-                #print("before activation, start {} pos = {} ".format(i, pop[i].pos))
-                pop[i].switch_activation()
-                #print("after activation, start {} pos = {} ".format(i, pop[i].pos))
 
         #get the event horizon        
         eventHorizon = calcEvetHorizon(global_BH, pop)
@@ -346,16 +374,19 @@ def fit(lam, num_of_samples,num_iter, X, Y):
                                 pop[i].pos[j] = 0
                 #print("newly intialized position of star {} is {}".format(i,pop[i].pos))
                     
-
+        print("expreiment ID  || ", experiment_id)
         print("fitness || ", global_BH.fitness, "\n")
         #print("lam = ", lam)
         features = select_worst_features(global_BH.pos)
         print("hamming's loss = ", global_BH.ham_loss)
         #print("ham score = ", global_BH.ham_score)
         print("number of features selected = ", (dim-len(features)))
-
-        #print("\n\n")
-        #print("converting BH to binary")
+        print("global bh name {} | {}".format(global_BH.name, experiment_id))
+        print("global bh id, ", id(global_BH))
+        print("checking if global BH is fitted in Exp {}".format(experiment_id))
+        
+        sklearn.utils.validation.check_is_fitted(global_BH.clf)
+        print("*********************************\n\n")
 
         it = it + 1
     
@@ -391,42 +422,70 @@ def single_run(experiment_id):
     random.seed(experiment_id)
     seed = random.randint(1, 1000)
     print("Running experiment number: ", experiment_id)
-    data = pd.read_csv('Data/medical_clean.csv')
-    Y = data.iloc[:, -45:]
-    X = data.iloc[:, 1:-45]
-    
+    data = pd.read_csv('Data/emotions_clean.csv')
+    print("data = ", data)
+    X = data.iloc[:, :-6]
+    Y = data.iloc[:, -6:]
+
 
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     #uncomment to run with chi^2
     X = univariate_feature_elimination(X,Y,15)
-    print("x shape = ", X.shape)
     
     #parameters and variables intializations
-    lam = 0.00000001
+    lam_list = [0.0000001, 0.0000005, 0.0000007, 0.000000008, 0.0000000002, 0.0000008]
+    rand_num = random.randint(0, 5)
+    lam = lam_list[rand_num]
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=seed)
     #run the algorithm
-    BH = fit(lam,20,50,X_train,Y_train)
+    
+    BH = fit(experiment_id,lam,NUM_STARS,NUM_ITER,X_train,Y_train)
     features = BH.active_features
     train_loss = BH.ham_loss
     size = BH.size
-
+    X_train_subset = X_train[features]
     X_test_subset = X_test[features]
+    print("name of BH = ", BH.name)
+    print("BH id, ", id(BH))
+    #BH.classifier_fit(X_test_subset, Y_train)
+    print("checking if BH is fitted")
+    sklearn.utils.validation.check_is_fitted(BH.clf)
     y_pred = BH.classifier_predict(X_test_subset)
     test_loss = hamming_loss(y_pred, Y_test)
+    test_accuracy = accuracy_score(y_pred, Y_test)
     rl_loss = label_ranking_loss(Y_test,y_pred)
     avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
+    print("Test loss || ", test_loss)
+
     metric = defaultdict()
+    metric['lam'] = lam
     metric['test_loss'] = test_loss
     metric['rl_loss'] = rl_loss
     metric['avg_precision'] = avg_precision
+    metric['accuracy'] = test_accuracy
     metric['feature_size'] = size
+    metric['active_features'] = BH.active_features
+    print("END OF EXPERIMENT ", experiment_id)
+    print("LAMBDA : ", metric['lam'])
+    print("TEST LOSS : ",metric['test_loss'])
+    print("ACCURACY : ",metric['accuracy'])
+    print("FEATURES SELECTED ", metric['feature_size'])
+    print("RL LOSS", metric['rl_loss'])
+    print("AVERGAE PRECISION :", metric["avg_precision"])
+
+    #print("creating sub report")
+    #create_sub_report(metric, experiment_id)
+    #print("done creating sub reports")
     return metric
 
 REPORT_PATH = './reports'
+#SUB_REPORT_PATH = './run_report/medical'
+
+
 
 def create_report(metric):
     report_df = pd.DataFrame(metric)
@@ -434,7 +493,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'report_medical_flip_20stars_0.02_lam0.00000001.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'batch4_report_emotions.xlsx'))
 
 def run_experiments(num_experiments: int):
     """
@@ -449,7 +508,7 @@ def run_experiments(num_experiments: int):
     create_report(res)
 
 def main():
-    run_experiments(4)
+    run_experiments(5)
 
 if __name__ == "__main__":
     start_time = time.time()
