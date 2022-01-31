@@ -498,7 +498,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'batch5_report_yeast_crossover_20stars_0.02_lam0.0000001.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'take2_batch2_report_yeast.xlsx'))
 
 def run_experiments(num_experiments: int):
     """

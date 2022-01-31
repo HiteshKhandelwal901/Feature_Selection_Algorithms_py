@@ -26,6 +26,7 @@ from skmultilearn.adapt import MLkNN
 from sklearn.neighbors import KNeighborsClassifier
 from multiprocessing import Pool, cpu_count
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import cross_val_score
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -177,6 +178,8 @@ class Star:
             avg_precision =  label_ranking_average_precision_score(y, y_pred)
             return loss, rl_loss, avg_precision
         return score, loss
+
+
 
     def classifier_fit(self, X,y):
         self.clf.fit(np.array(X), np.array(y))

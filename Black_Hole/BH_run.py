@@ -48,14 +48,14 @@ if __name__ == "__main__":
     #print("covg_error = ", covg_error)
     """
 
-    data2 = pd.read_excel('reports/batch1_crossover_Scene.xlsx')
-    data3 = pd.read_excel('reports/batch2_crossover_Scene.xlsx')
-    data4 = pd.read_excel('reports/batch3_crossover_Scene.xlsx')
-    data5 = pd.read_excel('reports/batch4_crossover_Scene.xlsx')
+    data2 = pd.read_excel('reports/take2_batch1_report_scene.xlsx')
+    data3 = pd.read_excel('reports/take2_batch2_report_scene.xlsx')
+    data4 = pd.read_excel('reports/take2_batch3_report_scene.xlsx')
+    data5 = pd.read_excel('reports/take2_batch4_report_scene.xlsx')
     #data5 = pd.read_excel('reports/report_crossover_flip_yeast_20stars_0.02lam0.0005.xlsx')
     
     data = pd.concat([data2, data3, data4, data5])
-    data.to_excel('reports/20runsscene.xlsx')
+    data.to_excel('reports/take2_20runs_scene.xlsx')
     test_loss = data['test_loss']
     rl_loss = data['rl_loss']
     avg_precision = data['avg_precision']
