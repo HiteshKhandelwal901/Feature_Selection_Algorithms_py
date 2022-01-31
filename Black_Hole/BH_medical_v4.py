@@ -418,6 +418,11 @@ def Average(lst):
 def variance(lst):
     return statistics.variance(lst)
 
+def hamming_score(y_true, y_pred):
+    return (
+        (y_true & y_pred).sum(axis=1) / (y_true | y_pred).sum(axis=1)
+    ).mean()
+
 def single_run(experiment_id):
     random.seed(experiment_id)
     seed = random.randint(1, 1000)
@@ -456,7 +461,7 @@ def single_run(experiment_id):
     sklearn.utils.validation.check_is_fitted(BH.clf)
     y_pred = BH.classifier_predict(X_test_subset)
     test_loss = hamming_loss(y_pred, Y_test)
-    test_accuracy = accuracy_score(y_pred, Y_test)
+    test_accuracy = hamming_score(Y_test, y_pred)
     rl_loss = label_ranking_loss(Y_test,y_pred)
     avg_precision = label_ranking_average_precision_score(Y_test, y_pred)
     print("Test loss || ", test_loss)

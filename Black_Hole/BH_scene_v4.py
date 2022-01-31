@@ -421,6 +421,11 @@ def Average(lst):
 def variance(lst):
     return statistics.variance(lst)
 
+def hamming_score(y_true, y_pred):
+    return (
+        (y_true & y_pred).sum(axis=1) / (y_true | y_pred).sum(axis=1)
+    ).mean()
+
 def single_run(experiment_id):
     random.seed(experiment_id)
     seed = random.randint(1, 1000)

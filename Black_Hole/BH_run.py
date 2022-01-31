@@ -4,6 +4,8 @@ from utility import hamming_score, hamming_scoreCV
 def avg(lst):
     return sum(lst)/len(lst)
 
+
+
 if __name__ == "__main__":
     """
     data = pd.read_csv('BH_bipirate_binary_BH_train_test.csv')
