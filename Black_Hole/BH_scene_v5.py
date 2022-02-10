@@ -33,7 +33,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 57
+dim = 294
 score_cache = defaultdict()
 
 NUM_STARS = 20
@@ -134,7 +134,7 @@ class Star:
             #print("dim {}".format(i))
             rand_num = random.uniform(0, 1)
             #print("rand_num = ", rand_num)
-            if rand_num <= 0.03:
+            if rand_num <= 0.02:
                 #print("true lesser than 0.05")
                 #convert 0 to 1
                 if self.pos[i] == 0:
@@ -229,24 +229,24 @@ class Star:
             #if the subset is not seen before, get the score by running hamming CV
             #score,clf,correct, incorrect = hamming_scoreCV(X, Y)
             #score, loss, clf = hamming_score(X,Y)
-            print("active features = ", X.columns)
             score, loss = self.hamming_score(X,Y)
+            self.active_features = X.columns
+            self.size = X.shape[1]
 
             #Num of features selected
             features_selected = (size - len(feature_index))
             corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
             #fitness = (score / (1 + (lam*features_selected))) - (0.5*corr_dist_sum)
-            fitness = (score / (1 + (lam*features_selected)))
+            fitness = (score / (1 + (lam*self.size)))
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
             score_cache[index_sum] = (fitness, score,1-score)
             #print("going to return")
-            self.active_features = X.columns
-            self.size = X.shape[1]
+            
             return (fitness, score, loss)
         else:
             #print("inside else")
-            return 0,0,1
+            return 0,0,0
 
     def __str__(self):
         print(self.pos)
@@ -322,19 +322,6 @@ def fit(experiment_id, lam, num_of_samples,num_iter, X, Y):
     while it < max_iter:
         print("iloop iter || ", it)
 
-        #crossover 
-        if it%5 == 0 and it>0:
-            pop = crossover(pop, lam, label_dict,X, Y)
-            print("returned pop length = ", len(pop))
-            #flip algorithm
-            for i in range(len(pop)):
-                if pop[i].isBH == False:
-                    pop[i].switch_activation()
-
-
-
-
-
         #intialize the population of stars and update thier fitnes
         for i in range(0, pop_number):
             #if pop[i].isBH == False:
@@ -384,10 +371,9 @@ def fit(experiment_id, lam, num_of_samples,num_iter, X, Y):
         print("number of features selected = ", (dim-len(features)))
         print("global bh name {} | {}".format(global_BH.name, experiment_id))
         print("global bh id, ", id(global_BH))
+        print("checking if global BH is fitted in Exp {}".format(experiment_id))
         
-        #print("checking if global BH is fitted in Exp {}".format(experiment_id))
-        
-        #sklearn.utils.validation.check_is_fitted(global_BH.clf)
+        sklearn.utils.validation.check_is_fitted(global_BH.clf)
         print("*********************************\n\n")
 
         it = it + 1
@@ -429,21 +415,20 @@ def single_run(experiment_id):
     random.seed(experiment_id)
     seed = random.randint(1, 1000)
     print("Running experiment number: ", experiment_id)
-    data = pd.read_csv('Data/emotions_clean.csv')
-    print("data = ", data)
-    X = data.iloc[:, :-6]
-    Y = data.iloc[:, -6:]
+
+    data = pd.read_csv("Data/scene.csv")
+    #Get X and Y from the data
+    Y = data[['Beach','Sunset','FallFoliage','Field','Mountain','Urban']]
+    X = data.drop(columns= Y)
 
 
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     #uncomment to run with chi^2
-    X = univariate_feature_elimination(X,Y,15)
+    #X = univariate_feature_elimination(X,Y,15)
     
-    #parameters and variables intializations
-    #lam_list = [0.0000001, 0.0000005, 0.0000007, 0.000000008, 0.0000000002, 0.0000008]
-    #rand_num = random.randint(0, 5)
-    lam = 0.00000005
+    #parameters and variables intializati
+    lam = 0
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
@@ -452,30 +437,16 @@ def single_run(experiment_id):
     
     BH = fit(experiment_id,lam,NUM_STARS,NUM_ITER,X_train,Y_train)
     features = BH.active_features
-    print("features = ", features)
     train_loss = BH.ham_loss
     size = BH.size
     X_train_subset = X_train[features]
     X_test_subset = X_test[features]
-
-    print("X train suset")
-    print(X_train_subset,type(X_train_subset))
-    print("X tesy subset")
-    print(X_test_subset, type(X_test_subset))
-
-    clf = MLkNN(k=10)
-    clf.fit(np.asarray(X_train_subset), np.asarray(Y_train))
-    y_pred = clf.predict(np.asarray(X_test_subset)).toarray()
-    print("Y_pred shape = ", y_pred.shape)
-
     print("name of BH = ", BH.name)
     print("BH id, ", id(BH))
     #BH.classifier_fit(X_test_subset, Y_train)
-    #print("checking if BH is fitted")
-    #sklearn.utils.validation.check_is_fitted(BH.clf)
-    #y_pred = BH.classifier_predict(X_test_subset)
-    print("ytr type = ", type(Y_train))
-    print("test type = , ",type(Y_test))
+    print("checking if BH is fitted")
+    sklearn.utils.validation.check_is_fitted(BH.clf)
+    y_pred = BH.classifier_predict(X_test_subset)
     test_loss = hamming_loss(y_pred, Y_test)
     test_accuracy = hamming_score(Y_test, y_pred)
     rl_loss = label_ranking_loss(Y_test,y_pred)
@@ -514,7 +485,8 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'taker7_batch2_report_emotions.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'takeb2_batch4_report_scene.xlsx'))
+
 def run_experiments(num_experiments: int):
     """
     Perform Black Hole Algorithms multiple item with different random seed each time

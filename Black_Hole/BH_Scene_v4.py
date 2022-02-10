@@ -230,18 +230,19 @@ class Star:
             #score,clf,correct, incorrect = hamming_scoreCV(X, Y)
             #score, loss, clf = hamming_score(X,Y)
             score, loss = self.hamming_score(X,Y)
+            self.active_features = X.columns
+            self.size = X.shape[1]
 
             #Num of features selected
             features_selected = (size - len(feature_index))
             corr_dist_sum = get_distance_corr(X,label_dict)
             #fitness equation
             #fitness = (score / (1 + (lam*features_selected))) - (0.5*corr_dist_sum)
-            fitness = (score / (1 + (lam*features_selected)))
+            fitness = (score / (1 + (lam*self.size)))
             #cache the information for this subset. cache based on feature_index, i.e, sum of index of features to remove
             score_cache[index_sum] = (fitness, score,1-score)
             #print("going to return")
-            self.active_features = X.columns
-            self.size = X.shape[1]
+            
             return (fitness, score, loss)
         else:
             #print("inside else")
@@ -439,10 +440,8 @@ def single_run(experiment_id):
     #uncomment to run with chi^2
     X = univariate_feature_elimination(X,Y,15)
     
-    #parameters and variables intializations
-    lam_list = [ 0.000000001, 0.000000008, 0.0000000002]
-    rand_num = random.randint(0, 2)
-    lam = lam_list[rand_num]
+    #parameters and variables intializati
+    lam = 0.005
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
@@ -499,7 +498,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'take2_batch4_report_scene.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'take13_batch2_report_scene.xlsx'))
 
 def run_experiments(num_experiments: int):
     """

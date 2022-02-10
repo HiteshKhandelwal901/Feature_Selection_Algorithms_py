@@ -33,7 +33,7 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
     os.environ["PYTHONWARNINGS"] = "ignore"
 
-dim = 57
+dim = 72
 score_cache = defaultdict()
 
 NUM_STARS = 20
@@ -322,14 +322,7 @@ def fit(experiment_id, lam, num_of_samples,num_iter, X, Y):
     while it < max_iter:
         print("iloop iter || ", it)
 
-        #crossover 
-        if it%5 == 0 and it>0:
-            pop = crossover(pop, lam, label_dict,X, Y)
-            print("returned pop length = ", len(pop))
-            #flip algorithm
-            for i in range(len(pop)):
-                if pop[i].isBH == False:
-                    pop[i].switch_activation()
+    
 
 
 
@@ -438,12 +431,12 @@ def single_run(experiment_id):
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     #uncomment to run with chi^2
-    X = univariate_feature_elimination(X,Y,15)
+    #X = univariate_feature_elimination(X,Y,15)
     
     #parameters and variables intializations
     #lam_list = [0.0000001, 0.0000005, 0.0000007, 0.000000008, 0.0000000002, 0.0000008]
     #rand_num = random.randint(0, 5)
-    lam = 0.00000005
+    lam = 0
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
@@ -514,7 +507,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'taker7_batch2_report_emotions.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'takeb1_batch2_report_emotions.xlsx'))
 def run_experiments(num_experiments: int):
     """
     Perform Black Hole Algorithms multiple item with different random seed each time

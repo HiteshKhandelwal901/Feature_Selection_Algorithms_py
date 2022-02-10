@@ -47,15 +47,15 @@ if __name__ == "__main__":
     print("avg_precision = ", avg_precision)
     #print("covg_error = ", covg_error)
     """
-
-    data2 = pd.read_excel('reports/take2_batch1_report_scene.xlsx')
-    data3 = pd.read_excel('reports/take2_batch2_report_scene.xlsx')
-    data4 = pd.read_excel('reports/take2_batch3_report_scene.xlsx')
-    data5 = pd.read_excel('reports/take2_batch4_report_scene.xlsx')
+    data =  pd.read_excel('reports/take11_20runs_yeast.xlsx')
+    #data2 = pd.read_excel('reports/take6_batch1_report_yeast.xlsx')
+    #data3 = pd.read_excel('reports/take6_batch2_report_yeast.xlsx')
+    #data4 = pd.read_excel('reports/take6_batch3_report_yeast.xlsx')
+    #data5 = pd.read_excel('reports/take6_batch4_report_yeast.xlsx')
     #data5 = pd.read_excel('reports/report_crossover_flip_yeast_20stars_0.02lam0.0005.xlsx')
     
-    data = pd.concat([data2, data3, data4, data5])
-    data.to_excel('reports/take2_20runs_scene.xlsx')
+    data = pd.concat([data])
+    #data.to_excel('reports/taker3__20runs_yeast.xlsx')
     test_loss = data['test_loss']
     rl_loss = data['rl_loss']
     avg_precision = data['avg_precision']
@@ -69,6 +69,8 @@ if __name__ == "__main__":
     print("avg precision  :", avg(avg_precision))
     print("feature size avg :", avg(feature_size))
 
+
+    print(data['lam'], data['test_loss'], data['feature_size'], data['accuracy'])
     
 
     

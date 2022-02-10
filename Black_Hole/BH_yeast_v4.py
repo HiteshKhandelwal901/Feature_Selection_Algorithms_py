@@ -322,6 +322,7 @@ def fit(experiment_id, lam, num_of_samples,num_iter, X, Y):
         print("iloop iter || ", it)
 
         #crossover 
+        
         if it%5 == 0 and it>0:
             pop = crossover(pop, lam, label_dict,X, Y)
             print("returned pop length = ", len(pop))
@@ -439,9 +440,8 @@ def single_run(experiment_id):
     X = univariate_feature_elimination(X,Y,15)
     
     #parameters and variables intializations
-    lam_list = [0.0000001, 0.0000005, 0.0000007, 0.000000008, 0.0000000002, 0.0000008]
     rand_num = random.randint(0, 5)
-    lam = lam_list[rand_num]
+    lam = 0.0002
     seed = random.randint(1, 1000)
     #Reading the data into Dataframe
 
@@ -498,7 +498,7 @@ def create_report(metric):
     if not os.path.exists(REPORT_PATH):
         print("Creating Report directory", REPORT_PATH)
         os.mkdir(REPORT_PATH)
-    report_df.to_excel(os.path.join(REPORT_PATH, 'take2_batch2_report_yeast.xlsx'))
+    report_df.to_excel(os.path.join(REPORT_PATH, 'taker5_batch2_report_yeast.xlsx'))
 
 def run_experiments(num_experiments: int):
     """
