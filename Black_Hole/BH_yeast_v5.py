@@ -430,7 +430,7 @@ def single_run(experiment_id):
     scaled_features = sklearn.preprocessing.MinMaxScaler().fit_transform(X.values)
     X = pd.DataFrame(scaled_features, index= X.index, columns= X.columns)
     #uncomment to run with chi^2
-    X = univariate_feature_elimination(X,Y,15)
+    #X = univariate_feature_elimination(X,Y,15)
     
     #parameters and variables intializations
     rand_num = random.randint(0, 5)
